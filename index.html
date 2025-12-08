@@ -84,6 +84,24 @@
         .badge-blue { background: #dbeafe; color: #1e40af; }
         .badge-green { background: #d1fae5; color: #065f46; }
         .badge-yellow { background: #fef3c7; color: #92400e; }
+
+        /* Statuts des ventes */
+        .vente-row-probleme { background: #fef2f2 !important; }
+        .vente-row-probleme:hover { background: #fee2e2 !important; }
+        .vente-row-attente { background: #fffbeb !important; }
+        .vente-row-attente:hover { background: #fef3c7 !important; }
+        .statut-btn {
+            width: 24px; height: 24px; border-radius: 50%; border: 2px solid #d1d5db;
+            cursor: pointer; transition: all 0.2s; display: inline-flex;
+            align-items: center; justify-content: center; font-size: 0.7rem;
+        }
+        .statut-btn:hover { transform: scale(1.1); }
+        .statut-btn-rouge { background: #fee2e2; border-color: #dc2626; }
+        .statut-btn-rouge.active { background: #dc2626; border-color: #dc2626; }
+        .statut-btn-orange { background: #fef3c7; border-color: #f59e0b; }
+        .statut-btn-orange.active { background: #f59e0b; border-color: #f59e0b; }
+        .statut-btn-aucun { background: #f3f4f6; border-color: #9ca3af; }
+        .statut-btn-aucun.active { background: #10b981; border-color: #10b981; }
         
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(30px); }
@@ -413,6 +431,8 @@ function CommentModal({ vente, onClose }) {
                                         <option value="2023">2023</option>
                                         <option value="2024">2024</option>
                                         <option value="2025">2025</option>
+                                        <option value="2026">2026</option>
+                                        <option value="2027">2027</option>
                                     </select>
 
                                     {currentUser.type === 'admin' && (
@@ -1245,7 +1265,7 @@ function CommentModal({ vente, onClose }) {
 
         // ========== LISTE DES VENTES ==========
         
-        function ListeVentes({ ventes, currentUser, filters, onEdit, onDelete, selectedCommentVente, setSelectedCommentVente }) {
+        function ListeVentes({ ventes, currentUser, filters, onEdit, onDelete, onUpdateStatut, selectedCommentVente, setSelectedCommentVente }) {
             const [searchTerm, setSearchTerm] = useState('');
             const [sortBy, setSortBy] = useState('dateCreation');
             const [sortOrder, setSortOrder] = useState('desc');
@@ -1369,19 +1389,20 @@ function CommentModal({ vente, onClose }) {
                                             <th>CA (€)</th>
                                             <th>PNA (€)</th>
                                             <th>Date effet</th>
+                                            <th style={{ textAlign: 'center' }}>Statut</th>
                                             <th style={{ textAlign: 'right' }}>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {filteredAndSortedVentes.map(vente => (
-                                            <tr key={vente.id}>
+                                            <tr key={vente.id} className={vente.statut === 'probleme' ? 'vente-row-probleme' : vente.statut === 'attente' ? 'vente-row-attente' : ''}>
                                                 {currentUser.type === 'admin' && (
                                                     <td style={{ fontWeight: '500' }}>{vente.commercial}</td>
                                                 )}
                                                 <td>
                                                     {vente.nom} {vente.prenom}
                                                    {vente.commentaire && (
-                                               <span 
+                                               <span
                                                  style={{ cursor: 'pointer', color: '#2563eb', marginLeft: '0.5rem', fontSize: '1.1rem', transition: 'transform 0.2s' }}
                                                  onClick={() => setSelectedCommentVente(vente)}
                                                  onMouseEnter={(e) => e.target.style.transform = 'scale(1.2)'}
@@ -1406,6 +1427,27 @@ function CommentModal({ vente, onClose }) {
                                                     {parseFloat(vente.pna || 0).toFixed(2)}
                                                 </td>
                                                 <td>{vente.dateEffet}</td>
+                                                <td style={{ textAlign: 'center' }}>
+                                                    {canEdit(vente) && (
+                                                        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.35rem' }}>
+                                                            <button
+                                                                className={`statut-btn statut-btn-rouge ${vente.statut === 'probleme' ? 'active' : ''}`}
+                                                                onClick={() => onUpdateStatut(vente.id, vente.statut === 'probleme' ? '' : 'probleme')}
+                                                                title="Problème"
+                                                            />
+                                                            <button
+                                                                className={`statut-btn statut-btn-orange ${vente.statut === 'attente' ? 'active' : ''}`}
+                                                                onClick={() => onUpdateStatut(vente.id, vente.statut === 'attente' ? '' : 'attente')}
+                                                                title="En attente"
+                                                            />
+                                                            <button
+                                                                className={`statut-btn statut-btn-aucun ${!vente.statut || vente.statut === '' ? 'active' : ''}`}
+                                                                onClick={() => onUpdateStatut(vente.id, '')}
+                                                                title="Validée"
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </td>
                                                 <td style={{ textAlign: 'right' }}>
                                                     {canEdit(vente) && (
                                                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
@@ -1992,7 +2034,7 @@ await db.collection('ventes').add(dataToSave);
                     message: 'Êtes-vous sûr de vouloir supprimer définitivement cette vente ? Cette action est irréversible.',
                     onConfirm: async () => {
                         setLoading(true);
-                        
+
                         try {
                             await db.collection('ventes').doc(venteId).delete();
                             showNotification('Vente supprimée avec succès', 'success');
@@ -2006,6 +2048,17 @@ await db.collection('ventes').add(dataToSave);
                     },
                    onCancel: () => setConfirmModal(null)
                 });
+            };
+
+            const handleUpdateStatut = async (venteId, newStatut) => {
+                try {
+                    await db.collection('ventes').doc(venteId).update({ statut: newStatut });
+                    const statutLabels = { 'probleme': 'Problème', 'attente': 'En attente', '': 'Validée' };
+                    showNotification(`Statut mis à jour : ${statutLabels[newStatut] || 'Validée'}`, 'success');
+                } catch (error) {
+                    console.error('Erreur mise à jour statut:', error);
+                    showNotification('Erreur lors de la mise à jour du statut', 'error');
+                }
             };
 
             const handleUpdateConfig = async (configType, newValues) => {
@@ -2140,9 +2193,10 @@ await db.collection('ventes').add(dataToSave);
                             currentUser={currentUser}
                             filters={filters}
                             onEdit={handleEditVente}
-                           onDelete={handleDeleteVente}
-                selectedCommentVente={selectedCommentVente}
-                setSelectedCommentVente={setSelectedCommentVente}
+                            onDelete={handleDeleteVente}
+                            onUpdateStatut={handleUpdateStatut}
+                            selectedCommentVente={selectedCommentVente}
+                            setSelectedCommentVente={setSelectedCommentVente}
                         />
                     )}
 
