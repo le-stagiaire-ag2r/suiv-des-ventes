@@ -1226,7 +1226,7 @@ function CommentModal({ vente, onClose }) {
                                 </div>
 
                                 <div className="form-group">
-                                    <label className="form-label">Jour du RDV</label>
+                                    <label className="form-label">Jour de la signature</label>
                                     <input
                                         type="date"
                                         className="form-input"
@@ -2106,7 +2106,7 @@ await db.collection('ventes').add(dataToSave);
 
                 const headers = [
                     'Commercial', 'Nom', 'Prénom', 'Âge', 'Numéro personne', 'Vente', 'Rattachement',
-                    'Origine', 'Contrat', 'Date effet', 'Chiffre d\'affaires', 'PNA', 'Jour du rdv'
+                    'Origine', 'Contrat', 'Date effet', 'Chiffre d\'affaires', 'PNA', 'Jour de la signature'
                 ];
 
                 let csvContent = headers.join(';') + '\n';
