@@ -910,70 +910,147 @@ function CommentModal({ vente, onClose }) {
                         })}
                 </div>
             </div>
+// ===== CLASSEMENT TOUS LES COMMERCIAUX ===== 
+{currentUser.type === 'admin' && (
+    <div className="card">
+        <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
+            🏆 {filters.viewMode === 'annuel' ? 'Classement Annuel' : 'Classement du Mois'} - Tous les Commerciaux
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+            {(() => {
+                // Récupérer tous les commerciaux
+                const allCommerciaux = Object.keys(currentUser.allUsers || {})
+                    .filter(email => currentUser.allUsers[email].type === 'commercial')
+                    .map(email => currentUser.allUsers[email].name);
 
-            {/* ===== TOP COMMERCIAUX ===== */}
-            {currentUser.type === 'admin' && topCommerciaux.length > 0 && (
-                <div className="card">
-                    <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
-                        🏆 Top 5 Commerciaux du Mois
-                    </h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
-                        {topCommerciaux.map(([commercial, data], idx) => (
-                            <div key={commercial} style={{
-                                padding: '1.5rem',
-                                background: idx === 0 ? 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' : '#f9fafb',
-                                borderRadius: '0.75rem',
-                                borderLeft: `4px solid ${['#fbbf24', '#60a5fa', '#34d399', '#f87171', '#a78bfa'][idx]}`
+                // Créer les stats pour tous les commerciaux
+                const commerciauxStats = {};
+                
+                allCommerciaux.forEach(commercial => {
+                    commerciauxStats[commercial] = { ventes: 0, ca: 0, pna: 0 };
+                });
+
+                // Remplir avec les ventes existantes
+                ventes.forEach(v => {
+                    if (commerciauxStats[v.commercial]) {
+                        commerciauxStats[v.commercial].ventes++;
+                        commerciauxStats[v.commercial].ca += parseFloat(v.chiffreAffaires) || 0;
+                        commerciauxStats[v.commercial].pna += parseFloat(v.pna) || 0;
+                    }
+                });
+
+                // Trier par PNA (du plus grand au plus petit)
+                const sortedCommerciaux = Object.entries(commerciauxStats)
+                    .sort((a, b) => b[1].pna - a[1].pna);
+
+                return sortedCommerciaux.map(([commercial, data], idx) => (
+                    <div key={commercial} style={{
+                        padding: '1.5rem',
+                        background: idx === 0 ? 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' : 
+                                   idx === 1 ? 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)' :
+                                   idx === 2 ? 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)' :
+                                   '#f9fafb',
+                        borderRadius: '0.75rem',
+                        borderLeft: `4px solid ${
+                            idx === 0 ? '#fbbf24' : 
+                            idx === 1 ? '#60a5fa' : 
+                            idx === 2 ? '#34d399' : 
+                            idx === 3 ? '#f87171' : 
+                            idx === 4 ? '#a78bfa' : 
+                            '#9ca3af'
+                        }`,
+                        position: 'relative',
+                        boxShadow: idx < 3 ? '0 4px 12px rgba(0,0,0,0.1)' : 'none'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+                            <div style={{
+                                fontSize: idx < 3 ? '2rem' : '1.5rem',
+                                marginRight: '0.75rem',
+                                fontWeight: idx < 3 ? 'bold' : 'normal'
                             }}>
-                                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-                                    <div style={{
-                                        fontSize: '1.75rem',
-                                        marginRight: '0.75rem'
-                                    }}>
-                                        {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}
-                                    </div>
-                                    <div>
-                                        <div style={{ fontWeight: '600', color: '#1f2937' }}>
-                                            {commercial}
-                                        </div>
-                                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                                            Rang {idx + 1}
-                                        </div>
-                                    </div>
+                                {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ 
+                                    fontWeight: '600', 
+                                    color: '#1f2937',
+                                    fontSize: idx < 3 ? '1.1rem' : '1rem'
+                                }}>
+                                    {commercial}
                                 </div>
-                                
-                                <div style={{ display: 'grid', gap: '0.75rem' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                        <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Ventes</span>
-                                        <span style={{ fontWeight: '600', color: '#1f2937' }}>
-                                            {data.ventes}
-                                        </span>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                        <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>CA Total</span>
-                                        <span style={{ fontWeight: '600', color: '#059669' }}>
-                                            {data.ca.toFixed(2)}€
-                                        </span>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                        <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>PNA</span>
-                                        <span style={{ fontWeight: '600', color: '#7c3aed' }}>
-                                            {data.pna.toFixed(2)}€
-                                        </span>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                        <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>CA Moyen</span>
-                                        <span style={{ fontWeight: '600', color: '#ea580c' }}>
-                                            {data.ventes > 0 ? (data.ca / data.ventes).toFixed(2) : '0'}€
-                                        </span>
-                                    </div>
+                                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                                    Rang {idx + 1}
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+                        </div>
+                        
+                        <div style={{ display: 'grid', gap: '0.75rem' }}>
+                            {/* PNA EN PREMIER */}
+                            <div style={{ 
+                                display: 'flex', 
+                                justifyContent: 'space-between',
+                                padding: '0.5rem',
+                                background: idx < 3 ? 'rgba(124, 58, 237, 0.1)' : 'transparent',
+                                borderRadius: '0.5rem'
+                            }}>
+                                <span style={{ 
+                                    fontSize: '0.875rem', 
+                                    color: '#6b7280',
+                                    fontWeight: '600'
+                                }}>
+                                    🎯 PNA
+                                </span>
+                                <span style={{ 
+                                    fontWeight: '700', 
+                                    color: '#7c3aed',
+                                    fontSize: idx < 3 ? '1.1rem' : '1rem'
+                                }}>
+                                    {data.pna.toFixed(2)}€
+                                </span>
+                            </div>
 
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Ventes</span>
+                                <span style={{ fontWeight: '600', color: '#1f2937' }}>
+                                    {data.ventes}
+                                </span>
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>CA Total</span>
+                                <span style={{ fontWeight: '600', color: '#059669' }}>
+                                    {data.ca.toFixed(2)}€
+                                </span>
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>CA Moyen</span>
+                                <span style={{ fontWeight: '600', color: '#ea580c' }}>
+                                    {data.ventes > 0 ? (data.ca / data.ventes).toFixed(2) : '0'}€
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Badge pour les commerciaux sans ventes */}
+                        {data.ventes === 0 && (
+                            <div style={{
+                                marginTop: '0.75rem',
+                                padding: '0.5rem',
+                                background: '#fef3c7',
+                                borderRadius: '0.5rem',
+                                textAlign: 'center',
+                                fontSize: '0.75rem',
+                                color: '#92400e'
+                            }}>
+                                Aucune vente sur cette période
+                            </div>
+                        )}
+                    </div>
+                ));
+            })()}
+        </div>
+    </div>
+)}
             {/* ===== DERNIÈRES VENTES ===== */}
             <div className="card">
                 <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
