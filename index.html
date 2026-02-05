@@ -461,22 +461,28 @@ function CommentModal({ vente, onClose }) {
                                         📊 Dashboard
                                     </button>
 
-                                    {currentUser.type === 'commercial' && (
-                                        <>
-                                            <button 
-                                                className={`btn ${currentView === 'saisie' ? 'btn-primary' : 'btn-secondary'}`}
-                                                onClick={() => setCurrentView('saisie')}
-                                            >
-                                                ➕ Nouvelle vente
-                                            </button>
-                                            <button 
-                                                className={`btn ${currentView === 'liste' ? 'btn-primary' : 'btn-secondary'}`}
-                                                onClick={() => setCurrentView('liste')}
-                                            >
-                                                👁️ Mes ventes ({ventesCount})
-                                            </button>
-                                        </>
-                                    )}
+                             {currentUser.type === 'commercial' && (
+    <>
+        <button 
+            className={`btn ${currentView === 'saisie' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setCurrentView('saisie')}
+        >
+            ➕ Nouvelle vente
+        </button>
+        <button 
+            className={`btn ${currentView === 'permanences' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setCurrentView('permanences')}
+        >
+            📍 Permanence
+        </button>
+        <button 
+            className={`btn ${currentView === 'liste' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setCurrentView('liste')}
+        >
+            👁️ Mes ventes ({ventesCount})
+        </button>
+    </>
+)}
 
                                     {currentUser.type === 'admin' && (
                                         <>
@@ -512,7 +518,7 @@ function CommentModal({ vente, onClose }) {
 
         // ========== DASHBOARD ==========
         
-       function Dashboard({ ventes, currentUser }) {
+      function Dashboard({ ventes, currentUser, permanences }) {
     const stats = useMemo(() => {
         const totalVentes = ventes.length;
         const totalCA = ventes.reduce((sum, v) => sum + (parseFloat(v.chiffreAffaires) || 0), 0);
@@ -596,7 +602,7 @@ function CommentModal({ vente, onClose }) {
                     </div>
                 ))}
             </div>
-{/* Performance par Permanence/Agence */}
+{/* Performance par Permanence/Agence AMÉLIORÉ */}
 <div className="card">
     <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem' }}>
         Performance par Permanence/Agence
@@ -617,17 +623,26 @@ function CommentModal({ vente, onClose }) {
                     
                     if (isAgence) {
                         if (!agencesStats[vente.rattachement]) {
-                            agencesStats[vente.rattachement] = { ventes: 0, pna: 0 };
+                            agencesStats[vente.rattachement] = { ventes: 0, pna: 0, visites: 0, commercials: new Set() };
                         }
                         agencesStats[vente.rattachement].ventes++;
                         agencesStats[vente.rattachement].pna += pnaAmount;
+                        agencesStats[vente.rattachement].commercials.add(vente.commercial);
                     } else {
                         if (!permanencesStats[vente.rattachement]) {
-                            permanencesStats[vente.rattachement] = { ventes: 0, pna: 0 };
+                            permanencesStats[vente.rattachement] = { ventes: 0, pna: 0, visites: 0, commercials: new Set() };
                         }
                         permanencesStats[vente.rattachement].ventes++;
                         permanencesStats[vente.rattachement].pna += pnaAmount;
+                        permanencesStats[vente.rattachement].commercials.add(vente.commercial);
                     }
+                }
+            });
+
+            // Récupérer les visites des permanences enregistrées
+            permanences.forEach(perm => {
+                if (permanencesStats[perm.rattachement]) {
+                    permanencesStats[perm.rattachement].visites += perm.jours;
                 }
             });
             
@@ -638,6 +653,7 @@ function CommentModal({ vente, onClose }) {
                 <>
                     {agencesList.map(agence => {
                         const data = agencesStats[agence];
+                        const commercialsList = Array.from(data.commercials).join(', ');
                         return (
                             <div key={agence} style={{ 
                                 padding: '1rem', 
@@ -652,14 +668,19 @@ function CommentModal({ vente, onClose }) {
                                 <div style={{ fontSize: '1.125rem', fontWeight: '700', color: '#1f2937' }}>
                                     {data.ventes} ventes
                                 </div>
-                                <div style={{ fontSize: '0.875rem', color: '#0277bd', fontWeight: '500' }}>
+                                <div style={{ fontSize: '0.875rem', color: '#0277bd', fontWeight: '500', marginBottom: '0.25rem' }}>
                                     PNA: {data.pna.toFixed(2)}€
+                                </div>
+                                <div style={{ fontSize: '0.75rem', color: '#6b7280', fontStyle: 'italic' }}>
+                                    ({commercialsList})
                                 </div>
                             </div>
                         );
                     })}
                     {permanencesList.map(permanence => {
                         const data = permanencesStats[permanence];
+                        const commercialsList = Array.from(data.commercials).join(', ');
+                        const moyenne = data.visites > 0 ? data.pna / data.visites : 0;
                         return (
                             <div key={permanence} style={{ 
                                 padding: '1rem', 
@@ -673,8 +694,14 @@ function CommentModal({ vente, onClose }) {
                                 <div style={{ fontSize: '1.125rem', fontWeight: '700', color: '#1f2937' }}>
                                     {data.ventes} ventes
                                 </div>
-                                <div style={{ fontSize: '0.875rem', color: '#7c3aed', fontWeight: '500' }}>
+                                <div style={{ fontSize: '0.875rem', color: '#7c3aed', fontWeight: '500', marginBottom: '0.25rem' }}>
                                     PNA: {data.pna.toFixed(2)}€
+                                </div>
+                                <div style={{ fontSize: '0.875rem', color: '#059669', fontWeight: '500', marginBottom: '0.25rem' }}>
+                                    💰 Moyenne: {moyenne.toFixed(2)}€/visite
+                                </div>
+                                <div style={{ fontSize: '0.75rem', color: '#6b7280', fontStyle: 'italic' }}>
+                                    ({commercialsList})
                                 </div>
                             </div>
                         );
@@ -1339,7 +1366,86 @@ function CommentModal({ vente, onClose }) {
                 </div>
             );
         }
+// ========== FORMULAIRE PERMANENCE ==========
 
+function EnregistrerPermanence({ currentUser, config, onSubmit }) {
+    const [formData, setFormData] = useState({
+        rattachement: '',
+        type: 'entiere'
+    });
+
+    const rattachementOptions = useMemo(() => {
+        let options = [];
+        if (currentUser.type === 'commercial') {
+            options.push(currentUser.agence);
+            options = options.concat(currentUser.permanences || []);
+        }
+        options = options.concat(config.rattachements || []);
+        return [...new Set(options)];
+    }, [currentUser, config.rattachements]);
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        
+        const permData = {
+            commercial: currentUser.name,
+            rattachement: formData.rattachement,
+            type: formData.type,
+            jours: formData.type === 'entiere' ? 1 : 0.5,
+            dateCreation: new Date().toLocaleString('fr-FR')
+        };
+
+        onSubmit(permData);
+        setFormData({ rattachement: '', type: 'entiere' });
+    };
+
+    return (
+        <div className="container" style={{ paddingTop: '1.5rem' }}>
+            <div className="card">
+                <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1.5rem' }}>
+                    📍 Enregistrer une permanence
+                </h2>
+
+                <form onSubmit={handleSubmit}>
+                    <div className="form-grid">
+                        <div className="form-group">
+                            <label className="form-label">Permanence *</label>
+                            <select
+                                className="form-select"
+                                value={formData.rattachement}
+                                onChange={(e) => setFormData({ ...formData, rattachement: e.target.value })}
+                                required
+                            >
+                                <option value="">Sélectionner une permanence</option>
+                                {rattachementOptions.map(ratt => (
+                                    <option key={ratt} value={ratt}>{ratt}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Type de visite *</label>
+                            <select
+                                className="form-select"
+                                value={formData.type}
+                                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                            >
+                                <option value="entiere">Journée entière (1 jour)</option>
+                                <option value="demi">Demi-journée (0.5 jour)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
+                        <button type="submit" className="btn btn-success">
+                            ✅ Enregistrer la permanence
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
         // ========== LISTE DES VENTES ==========
         
         function ListeVentes({ ventes, currentUser, filters, onEdit, onDelete, onUpdateStatut, selectedCommentVente, setSelectedCommentVente }) {
@@ -1933,8 +2039,9 @@ function CommentModal({ vente, onClose }) {
         function App() {
             const [currentUser, setCurrentUser] = useState(null);
             const [isAuthenticating, setIsAuthenticating] = useState(true);
-            const [ventes, setVentes] = useState([]);
-            const [config, setConfig] = useState({
+           const [ventes, setVentes] = useState([]);
+           const [permanences, setPermanences] = useState([]);
+           const [config, setConfig] = useState({
     contrats: [],
     typesVente: [],
     origines: [],
@@ -2031,11 +2138,20 @@ function CommentModal({ vente, onClose }) {
                     setConfig(newConfig);
                 });
 
-                return () => {
-                    unsubscribeVentes();
-                    unsubscribeConfig();
-                };
-            }, [currentUser]);
+              // Écoute des permanences
+const unsubscribePermanences = db.collection('permanences').onSnapshot((snapshot) => {
+    const firebasePermanences = [];
+    snapshot.forEach((doc) => {
+        firebasePermanences.push({ id: doc.id, ...doc.data() });
+    });
+    setPermanences(firebasePermanences);
+});
+
+return () => {
+    unsubscribeVentes();
+    unsubscribeConfig();
+    unsubscribePermanences();
+}; [currentUser]);
 
             // Filtrer les ventes
             const filteredVentes = useMemo(() => {
@@ -2174,7 +2290,20 @@ await db.collection('ventes').add(dataToSave);
 
                 setLoading(false);
             };
+const handleSubmitPermanence = async (permData) => {
+    setLoading(true);
 
+    try {
+        await db.collection('permanences').add(permData);
+        showNotification('Permanence enregistrée avec succès', 'success');
+        setCurrentView('dashboard');
+    } catch (error) {
+        console.error('Erreur sauvegarde permanence:', error);
+        showNotification('Erreur lors de la sauvegarde', 'error');
+    }
+
+    setLoading(false);
+};
             const handleExportCSV = () => {
                 if (filteredVentes.length === 0) {
                     showNotification('Aucune vente à exporter', 'info');
@@ -2247,11 +2376,18 @@ await db.collection('ventes').add(dataToSave);
                         ventesCount={filteredVentes.length}
                     />
 
-                    {currentView === 'dashboard' && (
-                        <Dashboard ventes={filteredVentes} currentUser={currentUser} />
-                    )}
+              {currentView === 'dashboard' && (
+    <Dashboard ventes={filteredVentes} currentUser={currentUser} permanences={permanences} />
+)}
 
-                    {currentView === 'saisie' && currentUser.type === 'commercial' && (
+                    {currentView === 'permanences' && currentUser.type === 'commercial' && (
+    <EnregistrerPermanence
+        currentUser={currentUser}
+        config={config}
+        onSubmit={handleSubmitPermanence}
+    />
+)}                 
+                {currentView === 'saisie' && currentUser.type === 'commercial' && (
                         <SaisieVente
                             currentUser={currentUser}
                             config={config}
