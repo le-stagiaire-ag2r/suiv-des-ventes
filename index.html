@@ -2138,7 +2138,7 @@ function EnregistrerPermanence({ currentUser, config, onSubmit }) {
                     setConfig(newConfig);
                 });
 
-              // Écoute des permanences
+// Écoute des permanences
 const unsubscribePermanences = db.collection('permanences').onSnapshot((snapshot) => {
     const firebasePermanences = [];
     snapshot.forEach((doc) => {
@@ -2151,7 +2151,8 @@ return () => {
     unsubscribeVentes();
     unsubscribeConfig();
     unsubscribePermanences();
-}; [currentUser]);
+};
+}, [currentUser]);
 
             // Filtrer les ventes
             const filteredVentes = useMemo(() => {
