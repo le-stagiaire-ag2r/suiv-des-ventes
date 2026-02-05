@@ -680,7 +680,7 @@ function CommentModal({ vente, onClose }) {
                     {permanencesList.map(permanence => {
                         const data = permanencesStats[permanence];
                         const commercialsList = Array.from(data.commercials).join(', ');
-                        const moyenne = data.visites > 0 ? data.pna / data.visites : 0;
+                        const moyenne = data.visites >= 1 ? data.pna / data.visites : null;
                         return (
                             <div key={permanence} style={{ 
                                 padding: '1rem', 
@@ -697,9 +697,15 @@ function CommentModal({ vente, onClose }) {
                                 <div style={{ fontSize: '0.875rem', color: '#7c3aed', fontWeight: '500', marginBottom: '0.25rem' }}>
                                     PNA: {data.pna.toFixed(2)}€
                                 </div>
-                                <div style={{ fontSize: '0.875rem', color: '#059669', fontWeight: '500', marginBottom: '0.25rem' }}>
-                                    💰 Moyenne: {moyenne.toFixed(2)}€/visite
-                                </div>
+                               {moyenne !== null ? (
+    <div style={{ fontSize: '0.875rem', color: '#059669', fontWeight: '500', marginBottom: '0.25rem' }}>
+        💰 Moyenne: {moyenne.toFixed(2)}€/visite
+    </div>
+) : (
+    <div style={{ fontSize: '0.875rem', color: '#9ca3af', fontWeight: '500', marginBottom: '0.25rem', fontStyle: 'italic' }}>
+        💰 Moyenne: -- (minimum 1 jour)
+    </div>
+)}
                                 <div style={{ fontSize: '0.75rem', color: '#6b7280', fontStyle: 'italic' }}>
                                     ({commercialsList})
                                 </div>
@@ -1446,6 +1452,117 @@ function EnregistrerPermanence({ currentUser, config, onSubmit }) {
         </div>
     );
 }
+
+// ========== LISTE DES PERMANENCES ==========
+
+function ListePermanences({ permanences, currentUser, onDelete }) {
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const userPermanences = useMemo(() => {
+        let filtered = permanences;
+
+        // Filtrer par commercial si pas admin
+        if (currentUser.type === 'commercial') {
+            filtered = filtered.filter(p => p.commercial === currentUser.name);
+        }
+
+        // Recherche
+        if (searchTerm.trim()) {
+            const search = searchTerm.toLowerCase().trim();
+            filtered = filtered.filter(p => 
+                (p.rattachement && p.rattachement.toLowerCase().includes(search)) ||
+                (p.commercial && p.commercial.toLowerCase().includes(search))
+            );
+        }
+
+        // Trier par date (plus récent en premier)
+        filtered.sort((a, b) => new Date(b.dateCreation || 0) - new Date(a.dateCreation || 0));
+
+        return filtered;
+    }, [permanences, currentUser, searchTerm]);
+
+    return (
+        <div className="container" style={{ paddingTop: '1.5rem' }}>
+            <div className="card">
+                <div style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: '1rem', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <div>
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: '600' }}>
+                                {currentUser.type === 'commercial' ? 'Mes permanences' : 'Toutes les permanences'} ({userPermanences.length})
+                            </h2>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                            <input
+                                type="text"
+                                placeholder="Rechercher..."
+                                className="form-input"
+                                style={{ width: '200px' }}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {userPermanences.length === 0 ? (
+                    <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
+                        <div style={{ fontSize: '1.125rem', marginBottom: '0.5rem' }}>
+                            Aucune permanence enregistrée
+                        </div>
+                        <div style={{ fontSize: '0.875rem' }}>
+                            {searchTerm ? 'Essayez une autre recherche' : 'Cliquez sur "Permanence" pour en ajouter une'}
+                        </div>
+                    </div>
+                ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                        <table className="table">
+                            <thead>
+                                <tr>
+                                    {currentUser.type === 'admin' && <th>Commercial</th>}
+                                    <th>Permanence</th>
+                                    <th>Type</th>
+                                    <th>Jours</th>
+                                    <th>Date création</th>
+                                    <th style={{ textAlign: 'right' }}>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {userPermanences.map(perm => (
+                                    <tr key={perm.id}>
+                                        {currentUser.type === 'admin' && (
+                                            <td style={{ fontWeight: '500' }}>{perm.commercial}</td>
+                                        )}
+                                        <td style={{ fontWeight: '500' }}>{perm.rattachement}</td>
+                                        <td>
+                                            <span className={`badge ${perm.type === 'entiere' ? 'badge-green' : 'badge-yellow'}`}>
+                                                {perm.type === 'entiere' ? 'Journée entière' : 'Demi-journée'}
+                                            </span>
+                                        </td>
+                                        <td style={{ fontWeight: '600', color: '#7c3aed' }}>{perm.jours}</td>
+                                        <td style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                                            {perm.dateCreation}
+                                        </td>
+                                        <td style={{ textAlign: 'right' }}>
+                                            <button
+                                                className="btn btn-danger"
+                                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                                                onClick={() => onDelete(perm.id)}
+                                                title="Supprimer"
+                                            >
+                                                🗑️
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
         // ========== LISTE DES VENTES ==========
         
         function ListeVentes({ ventes, currentUser, filters, onEdit, onDelete, onUpdateStatut, selectedCommentVente, setSelectedCommentVente }) {
@@ -2050,6 +2167,7 @@ function EnregistrerPermanence({ currentUser, config, onSubmit }) {
             
             const [selectedCommentVente, setSelectedCommentVente] = useState(null);
             const [currentView, setCurrentView] = useState('dashboard');
+            const [permanenceSubView, setPermanenceSubView] = useState('form'); // 'form' ou 'liste'
             const [filters, setFilters] = useState({
                 commercial: 'tous',
                 month: new Date().getMonth() + 1,
@@ -2305,6 +2423,27 @@ const handleSubmitPermanence = async (permData) => {
 
     setLoading(false);
 };
+            const handleDeletePermanence = (permId) => {
+    setConfirmModal({
+        title: 'Supprimer la permanence',
+        message: 'Êtes-vous sûr de vouloir supprimer cette permanence ?',
+        onConfirm: async () => {
+            setLoading(true);
+
+            try {
+                await db.collection('permanences').doc(permId).delete();
+                showNotification('Permanence supprimée avec succès', 'success');
+            } catch (error) {
+                console.error('Erreur suppression permanence:', error);
+                showNotification('Erreur lors de la suppression', 'error');
+            }
+
+            setLoading(false);
+            setConfirmModal(null);
+        },
+        onCancel: () => setConfirmModal(null)
+    });
+};
             const handleExportCSV = () => {
                 if (filteredVentes.length === 0) {
                     showNotification('Aucune vente à exporter', 'info');
@@ -2381,13 +2520,42 @@ const handleSubmitPermanence = async (permData) => {
     <Dashboard ventes={filteredVentes} currentUser={currentUser} permanences={permanences} />
 )}
 
-                    {currentView === 'permanences' && currentUser.type === 'commercial' && (
-    <EnregistrerPermanence
-        currentUser={currentUser}
-        config={config}
-        onSubmit={handleSubmitPermanence}
-    />
-)}                 
+                   {currentView === 'permanences' && currentUser.type === 'commercial' && (
+    <>
+        <div className="container" style={{ paddingTop: '1.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                <button 
+                    className={`btn ${permanenceSubView === 'form' ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => setPermanenceSubView('form')}
+                >
+                    ➕ Nouvelle permanence
+                </button>
+                <button 
+                    className={`btn ${permanenceSubView === 'liste' ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => setPermanenceSubView('liste')}
+                >
+                    📋 Liste des permanences
+                </button>
+            </div>
+        </div>
+
+        {permanenceSubView === 'form' && (
+            <EnregistrerPermanence
+                currentUser={currentUser}
+                config={config}
+                onSubmit={handleSubmitPermanence}
+            />
+        )}
+
+        {permanenceSubView === 'liste' && (
+            <ListePermanences
+                permanences={permanences}
+                currentUser={currentUser}
+                onDelete={handleDeletePermanence}
+            />
+        )}
+    </>
+)}
                 {currentView === 'saisie' && currentUser.type === 'commercial' && (
                         <SaisieVente
                             currentUser={currentUser}
