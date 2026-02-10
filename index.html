@@ -2148,46 +2148,49 @@ function ListePermanences({ permanences, currentUser, onDelete }) {
                         )}
                     </div>
                 </div>
+
                 {/* ===== IMPORT OBJECTIFS 2025 ===== */}
-                    <div className="card">
-                        <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem' }}>
-                            🎯 Import des Objectifs 2025
-                        </h3>
-                        
-                        <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1.5rem' }}>
-                            Importer automatiquement les objectifs de l'année 2025 pour tous les commerciaux. 
-                            Cette opération ne doit être effectuée qu'une seule fois.
-                        </p>
+                <div className="card">
+                    <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem' }}>
+                        🎯 Import des Objectifs 2025
+                    </h3>
+                    
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1.5rem' }}>
+                        Importer automatiquement les objectifs de l'année 2025 pour tous les commerciaux. 
+                        Cette opération ne doit être effectuée qu'une seule fois.
+                    </p>
 
-                        <button
-                            className="btn btn-primary"
-                            onClick={async () => {
-                                if (window.confirm('Importer les objectifs 2025 ?\n\n⚠️ Cette opération va ajouter 141 objectifs.\n\nContinuer ?')) {
-                                    const success = await importerObjectifs2025(db, showNotification);
-                                    
-                                    if (success) {
-                                        alert('✅ Import terminé !');
-                                    }
+                    <button
+                        className="btn btn-primary"
+                        onClick={async () => {
+                            if (window.confirm('Importer les objectifs 2025 ?\n\n⚠️ Cette opération va ajouter 141 objectifs.\n\nContinuer ?')) {
+                                const success = await importerObjectifs2025(db, showNotification);
+                                
+                                if (success) {
+                                    alert('✅ Import terminé !');
                                 }
-                            }}
-                        >
-                            📥 Importer les objectifs 2025
-                        </button>
+                            }
+                        }}
+                    >
+                        📥 Importer les objectifs 2025
+                    </button>
 
-                        <div style={{ 
-                            marginTop: '1rem', 
-                            padding: '1rem', 
-                            background: '#fef3c7', 
-                            borderRadius: '0.5rem',
-                            fontSize: '0.875rem',
-                            color: '#92400e'
-                        }}>
-                            ⚠️ <strong>Attention :</strong> Ne cliquez qu'une seule fois. 
-                            Sinon ça créera des doublons.
-                      </div>
+                    <div style={{ 
+                        marginTop: '1rem', 
+                        padding: '1rem', 
+                        background: '#fef3c7', 
+                        borderRadius: '0.5rem',
+                        fontSize: '0.875rem',
+                        color: '#92400e'
+                    }}>
+                        ⚠️ <strong>Attention :</strong> Ne cliquez qu'une seule fois. 
+                        Sinon ça créera des doublons.
                     </div>
-            );
-        }
+                </div>
+
+            </div>
+        );
+    }
 
         // ========== FONCTION D'IMPORT DES OBJECTIFS ==========
         
