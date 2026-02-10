@@ -1783,7 +1783,7 @@ function ListePermanences({ permanences, currentUser, onDelete }) {
 
         // ========== PAGE GESTION (Admin) ==========
         
-        function GestionPage({ config, onUpdateConfig }) {
+        function GestionPage({ config, onUpdateConfig, showNotification }) {
             const [showContractForm, setShowContractForm] = useState(false);
             const [showTypeVenteForm, setShowTypeVenteForm] = useState(false);
             const [showOrigineForm, setShowOrigineForm] = useState(false);
@@ -2741,11 +2741,12 @@ const handleSubmitPermanence = async (permData) => {
                     )}
 
                     {currentView === 'gestion' && currentUser.type === 'admin' && (
-                        <GestionPage
-                            config={config}
-                            onUpdateConfig={handleUpdateConfig}
-                        />
-                    )}
+    <GestionPage
+        config={config}
+        onUpdateConfig={handleUpdateConfig}
+        showNotification={showNotification}
+    />
+)}
 
                     {notification && (
                         <Notification
