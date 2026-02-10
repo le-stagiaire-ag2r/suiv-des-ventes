@@ -516,9 +516,197 @@ function CommentModal({ vente, onClose }) {
             );
         }
 
+        // ========== COMPOSANTS CHALLENGE ==========
+
+function ChallengeCard({ currentUser, ventes, objectifs }) {
+    const [currentMonth] = React.useState(new Date().getMonth() + 1);
+    const [currentYear] = React.useState(new Date().getFullYear());
+
+    const statsActuelles = React.useMemo(() => {
+        const ventesCommercial = ventes.filter(v => {
+            const date = new Date(v.jourRdv);
+            return v.commercial === currentUser.name 
+                && date.getMonth() + 1 === currentMonth
+                && date.getFullYear() === currentYear;
+        });
+
+        return {
+            nbAffaires: ventesCommercial.length,
+            pna: ventesCommercial.reduce((sum, v) => sum + (parseFloat(v.pna) || 0), 0)
+        };
+    }, [ventes, currentUser.name, currentMonth, currentYear]);
+
+    const objectifAnneDerniere = React.useMemo(() => {
+        const obj = objectifs.find(o => 
+            o.commercial.toLowerCase().includes(currentUser.name.toLowerCase().split(' ')[0])
+            && o.mois === currentMonth
+            && o.annee === 2025
+        );
+        return obj || { productionSignee: 0, nbAffaires: 0 };
+    }, [objectifs, currentUser.name, currentMonth, currentYear]);
+
+    const pourcentageAffaires = objectifAnneDerniere.nbAffaires > 0
+        ? (statsActuelles.nbAffaires / objectifAnneDerniere.nbAffaires) * 100
+        : 0;
+
+    const pourcentagePNA = objectifAnneDerniere.productionSignee > 0
+        ? (statsActuelles.pna / objectifAnneDerniere.productionSignee) * 100
+        : 0;
+
+    const getColor = (percentage) => {
+        if (percentage >= 120) return '#06b6d4';
+        if (percentage >= 100) return '#10b981';
+        if (percentage >= 70) return '#f59e0b';
+        return '#ef4444';
+    };
+
+    const colorAffaires = getColor(pourcentageAffaires);
+    const colorPNA = getColor(pourcentagePNA);
+
+    const getStatut = () => {
+        const avg = (pourcentageAffaires + pourcentagePNA) / 2;
+        if (avg >= 120) return { emoji: '🔵', text: 'Dépassement exceptionnel !', color: '#06b6d4' };
+        if (avg >= 100) return { emoji: '🟢', text: 'Objectif atteint !', color: '#10b981' };
+        if (avg >= 70) return { emoji: '🟡', text: 'En bonne voie', color: '#f59e0b' };
+        return { emoji: '🔴', text: 'À intensifier', color: '#ef4444' };
+    };
+
+    const statut = getStatut();
+    const moisNom = new Date(0, currentMonth - 1).toLocaleDateString('fr-FR', { month: 'long' });
+
+    if (objectifAnneDerniere.nbAffaires === 0 && objectifAnneDerniere.productionSignee === 0) {
+        return null;
+    }
+
+    return (
+        <div className="card" style={{
+            background: 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)',
+            border: `2px solid ${statut.color}30`
+        }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937' }}>
+                    🏆 Challenge {moisNom} {currentYear}
+                </h3>
+                <div style={{
+                    padding: '0.5rem 1rem',
+                    background: statut.color,
+                    color: 'white',
+                    borderRadius: '9999px',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                }}>
+                    {statut.emoji} {statut.text}
+                </div>
+            </div>
+
+            <div style={{ marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#374151' }}>
+                        📊 Nombre d'affaires
+                    </span>
+                    <span style={{ fontSize: '0.875rem', fontWeight: '700', color: colorAffaires }}>
+                        {pourcentageAffaires.toFixed(0)}%
+                    </span>
+                </div>
+                
+                <div style={{
+                    height: '24px',
+                    background: '#e5e7eb',
+                    borderRadius: '12px',
+                    overflow: 'hidden'
+                }}>
+                    <div style={{
+                        height: '100%',
+                        width: `${Math.min(pourcentageAffaires, 100)}%`,
+                        background: `linear-gradient(90deg, ${colorAffaires}, ${colorAffaires}dd)`,
+                        borderRadius: '12px',
+                        transition: 'width 1s ease-out'
+                    }}></div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+                    <span style={{ color: '#6b7280' }}>
+                        Actuel : <strong style={{ color: '#1f2937' }}>{statsActuelles.nbAffaires}</strong>
+                    </span>
+                    <span style={{ color: '#6b7280' }}>
+                        Objectif : <strong style={{ color: '#1f2937' }}>{objectifAnneDerniere.nbAffaires}</strong>
+                    </span>
+                </div>
+
+                {pourcentageAffaires < 100 && (
+                    <div style={{
+                        marginTop: '0.5rem',
+                        padding: '0.5rem',
+                        background: '#fef3c7',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.75rem',
+                        color: '#92400e',
+                        textAlign: 'center'
+                    }}>
+                        ⚡ Encore <strong>{objectifAnneDerniere.nbAffaires - statsActuelles.nbAffaires}</strong> affaires pour égaler l'année dernière !
+                    </div>
+                )}
+            </div>
+
+            <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#374151' }}>
+                        💰 Production signée (PNA)
+                    </span>
+                    <span style={{ fontSize: '0.875rem', fontWeight: '700', color: colorPNA }}>
+                        {pourcentagePNA.toFixed(0)}%
+                    </span>
+                </div>
+                
+                <div style={{
+                    height: '24px',
+                    background: '#e5e7eb',
+                    borderRadius: '12px',
+                    overflow: 'hidden'
+                }}>
+                    <div style={{
+                        height: '100%',
+                        width: `${Math.min(pourcentagePNA, 100)}%`,
+                        background: `linear-gradient(90deg, ${colorPNA}, ${colorPNA}dd)`,
+                        borderRadius: '12px',
+                        transition: 'width 1s ease-out'
+                    }}></div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+                    <span style={{ color: '#6b7280' }}>
+                        Actuel : <strong style={{ color: '#1f2937' }}>{statsActuelles.pna.toFixed(0)}€</strong>
+                    </span>
+                    <span style={{ color: '#6b7280' }}>
+                        Objectif : <strong style={{ color: '#1f2937' }}>{objectifAnneDerniere.productionSignee.toFixed(0)}€</strong>
+                    </span>
+                </div>
+
+                {pourcentagePNA < 100 && (
+                    <div style={{
+                        marginTop: '0.5rem',
+                        padding: '0.5rem',
+                        background: '#fef3c7',
+                        borderRadius: '0.5rem',
+                        fontSize: '0.75rem',
+                        color: '#92400e',
+                        textAlign: 'center'
+                    }}>
+                        ⚡ Encore <strong>{(objectifAnneDerniere.productionSignee - statsActuelles.pna).toFixed(0)}€</strong> pour égaler l'année dernière !
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// ========== DASHBOARD ==========
         // ========== DASHBOARD ==========
         
-      function Dashboard({ ventes, currentUser, permanences }) {
+      function Dashboard({ ventes, currentUser, permanences, objectifs }) {
     const stats = useMemo(() => {
         const totalVentes = ventes.length;
         const totalCA = ventes.reduce((sum, v) => sum + (parseFloat(v.chiffreAffaires) || 0), 0);
@@ -602,6 +790,18 @@ function CommentModal({ vente, onClose }) {
                     </div>
                 ))}
             </div>
+
+            </div>
+
+            {/* ===== CHALLENGE VS ANNÉE DERNIÈRE ===== */}
+            {currentUser.type === 'commercial' && (
+                <ChallengeCard
+                    currentUser={currentUser}
+                    ventes={ventes}
+                    objectifs={objectifs}
+                />
+            )}
+
 {/* Performance par Permanence/Agence AMÉLIORÉ */}
 <div className="card">
     <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem' }}>
@@ -2329,6 +2529,7 @@ function ListePermanences({ permanences, currentUser, onDelete }) {
             const [loading, setLoading] = useState(false);
             const [confirmModal, setConfirmModal] = useState(null);
             const [editingVente, setEditingVente] = useState(null);
+            const [objectifs, setObjectifs] = useState([]);
 
             // Authentification
             useEffect(() => {
@@ -2416,10 +2617,19 @@ const unsubscribePermanences = db.collection('permanences').onSnapshot((snapshot
     setPermanences(firebasePermanences);
 });
 
+const unsubscribeObjectifs = db.collection('objectifs').onSnapshot((snapshot) => {
+    const firebaseObjectifs = [];
+    snapshot.forEach((doc) => {
+        firebaseObjectifs.push({ id: doc.id, ...doc.data() });
+    });
+    setObjectifs(firebaseObjectifs);
+});
+
 return () => {
     unsubscribeVentes();
     unsubscribeConfig();
     unsubscribePermanences();
+    unsubscribeObjectifs();
 };
 }, [currentUser]);
 
@@ -2667,8 +2877,8 @@ const handleSubmitPermanence = async (permData) => {
                         ventesCount={filteredVentes.length}
                     />
 
-              {currentView === 'dashboard' && (
-    <Dashboard ventes={filteredVentes} currentUser={currentUser} permanences={permanences} />
+             {currentView === 'dashboard' && (
+    <Dashboard ventes={filteredVentes} currentUser={currentUser} permanences={permanences} objectifs={objectifs} />
 )}
 
                    {currentView === 'permanences' && currentUser.type === 'commercial' && (
