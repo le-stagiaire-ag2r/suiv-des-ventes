@@ -2148,9 +2148,161 @@ function ListePermanences({ permanences, currentUser, onDelete }) {
                         )}
                     </div>
                 </div>
+                {/* ===== IMPORT OBJECTIFS 2025 ===== */}
+                    <div className="card">
+                        <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem' }}>
+                            🎯 Import des Objectifs 2025
+                        </h3>
+                        
+                        <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1.5rem' }}>
+                            Importer automatiquement les objectifs de l'année 2025 pour tous les commerciaux. 
+                            Cette opération ne doit être effectuée qu'une seule fois.
+                        </p>
+
+                        <button
+                            className="btn btn-primary"
+                            onClick={async () => {
+                                if (window.confirm('Importer les objectifs 2025 ?\n\n⚠️ Cette opération va ajouter 141 objectifs.\n\nContinuer ?')) {
+                                    const success = await importerObjectifs2025(db, showNotification);
+                                    
+                                    if (success) {
+                                        alert('✅ Import terminé !');
+                                    }
+                                }
+                            }}
+                        >
+                            📥 Importer les objectifs 2025
+                        </button>
+
+                        <div style={{ 
+                            marginTop: '1rem', 
+                            padding: '1rem', 
+                            background: '#fef3c7', 
+                            borderRadius: '0.5rem',
+                            fontSize: '0.875rem',
+                            color: '#92400e'
+                        }}>
+                            ⚠️ <strong>Attention :</strong> Ne cliquez qu'une seule fois. 
+                            Sinon ça créera des doublons.
+                        </div>
+                    </div>
+
+                    </div>
+                </div>
             );
         }
 
+        // ========== FONCTION D'IMPORT DES OBJECTIFS ==========
+        
+        async function importerObjectifs2025(db, showNotification) {
+            const objectifs = {
+                "Aldo": {
+                    1: { pna: 28565, affaires: 22 }, 2: { pna: 11222, affaires: 9 }, 3: { pna: 6866, affaires: 8 },
+                    4: { pna: 21388, affaires: 12 }, 5: { pna: 34785, affaires: 17 }, 6: { pna: 34099, affaires: 17 },
+                    7: { pna: 19132, affaires: 10 }, 8: { pna: 7665, affaires: 6 }, 9: { pna: 40659, affaires: 19 },
+                    10: { pna: 30572, affaires: 17 }, 11: { pna: 17524, affaires: 10 }, 12: { pna: 20344, affaires: 14 }
+                },
+                "Cedric": {
+                    1: { pna: 39670, affaires: 22 }, 2: { pna: 8834, affaires: 7 }, 3: { pna: 5348, affaires: 5 },
+                    4: { pna: 6006, affaires: 5 }, 5: { pna: 21703, affaires: 14 }, 6: { pna: 12848, affaires: 9 },
+                    7: { pna: 52249, affaires: 12 }, 8: { pna: 15007, affaires: 15 }, 9: { pna: 23344, affaires: 14 },
+                    10: { pna: 15274, affaires: 11 }, 11: { pna: 27111, affaires: 15 }, 12: { pna: 18145, affaires: 8 }
+                },
+                "Annabelle": {
+                    1: { pna: 34213, affaires: 12 }, 2: { pna: 23933, affaires: 16 }, 3: { pna: 23043, affaires: 21 },
+                    4: { pna: 11038, affaires: 11 }, 5: { pna: 13553, affaires: 8 }, 6: { pna: 9998, affaires: 9 },
+                    7: { pna: 7931, affaires: 7 }, 8: { pna: 21333, affaires: 14 }, 9: { pna: 5587, affaires: 9 },
+                    10: { pna: 13557, affaires: 12 }, 11: { pna: 23353, affaires: 13 }, 12: { pna: 17158, affaires: 18 }
+                },
+                "Amandine": {
+                    1: { pna: 50207, affaires: 36 }, 2: { pna: 38825, affaires: 22 }, 3: { pna: 38516, affaires: 27 },
+                    4: { pna: 45535, affaires: 26 }, 5: { pna: 31666, affaires: 22 }, 6: { pna: 33563, affaires: 28 },
+                    7: { pna: 22579, affaires: 19 }, 8: { pna: 25006, affaires: 15 }, 9: { pna: 12507, affaires: 15 },
+                    10: { pna: 39770, affaires: 27 }, 11: { pna: 36475, affaires: 19 }, 12: { pna: 26549, affaires: 24 }
+                },
+                "Celine": {
+                    1: { pna: 17797, affaires: 16 }, 2: { pna: 14436, affaires: 10 }, 3: { pna: 26637, affaires: 18 },
+                    4: { pna: 21055, affaires: 21 }, 5: { pna: 15987, affaires: 14 }, 6: { pna: 27609, affaires: 22 },
+                    7: { pna: 14905, affaires: 13 }, 8: { pna: 6061, affaires: 4 }, 9: { pna: 20724, affaires: 13 },
+                    10: { pna: 13687, affaires: 16 }, 11: { pna: 8602, affaires: 11 }, 12: { pna: 33045, affaires: 25 }
+                },
+                "Sophie": {
+                    1: { pna: 60861, affaires: 25 }, 2: { pna: 33295, affaires: 21 }, 3: { pna: 36057, affaires: 21 },
+                    4: { pna: 30796, affaires: 21 }, 5: { pna: 37015, affaires: 23 }, 6: { pna: 42443, affaires: 25 },
+                    7: { pna: 23423, affaires: 20 }, 8: { pna: 7863, affaires: 7 }, 9: { pna: 22749, affaires: 11 },
+                    10: { pna: 60866, affaires: 37 }, 11: { pna: 26744, affaires: 15 }, 12: { pna: 48937, affaires: 30 }
+                },
+                "Christelle": {
+                    1: { pna: 440769, affaires: 250 }, 2: { pna: 46626, affaires: 19 }, 3: { pna: 46626, affaires: 19 },
+                    4: { pna: 82417, affaires: 37 }, 5: { pna: 41266, affaires: 24 }, 6: { pna: 41302, affaires: 26 },
+                    7: { pna: 1446, affaires: 1 }, 8: { pna: 31260, affaires: 19 }, 9: { pna: 42576, affaires: 22 },
+                    10: { pna: 46529, affaires: 22 }, 11: { pna: 38003, affaires: 17 }, 12: { pna: 67426, affaires: 34 }
+                },
+                "Valentine": {
+                    10: { pna: 0, affaires: 1 }, 11: { pna: 0, affaires: 1 }, 12: { pna: 774, affaires: 3 }
+                },
+                "July": {
+                    7: { pna: 6336, affaires: 7 }, 8: { pna: 3169, affaires: 2 }, 9: { pna: 10632, affaires: 9 },
+                    10: { pna: 16716, affaires: 19 }, 11: { pna: 12593, affaires: 7 }, 12: { pna: 10700, affaires: 7 }
+                },
+                "Sarah": {
+                    1: { pna: 31539, affaires: 19 }, 2: { pna: 24361, affaires: 16 }, 3: { pna: 38888, affaires: 21 },
+                    4: { pna: 22494, affaires: 12 }, 5: { pna: 29687, affaires: 17 }, 6: { pna: 26861, affaires: 19 },
+                    7: { pna: 25396, affaires: 16 }, 8: { pna: 7039, affaires: 4 }, 9: { pna: 19179, affaires: 14 },
+                    10: { pna: 31118, affaires: 17 }, 11: { pna: 37379, affaires: 11 }, 12: { pna: 28525, affaires: 13 }
+                },
+                "Laurence": {
+                    1: { pna: 41903, affaires: 26 }, 2: { pna: 56597, affaires: 34 }, 3: { pna: 40420, affaires: 25 },
+                    4: { pna: 45768, affaires: 32 }, 5: { pna: 57248, affaires: 18 }, 6: { pna: 22768, affaires: 17 },
+                    7: { pna: 33171, affaires: 21 }, 8: { pna: 28862, affaires: 15 }, 9: { pna: 9884, affaires: 13 },
+                    10: { pna: 46883, affaires: 34 }, 11: { pna: 27809, affaires: 22 }, 12: { pna: 26983, affaires: 17 }
+                },
+                "Caroline": {
+                    1: { pna: 23318, affaires: 19 }, 2: { pna: 34061, affaires: 25 }, 3: { pna: 26725, affaires: 24 },
+                    4: { pna: 18587, affaires: 11 }, 5: { pna: 19188, affaires: 11 }, 6: { pna: 19603, affaires: 24 },
+                    7: { pna: 24539, affaires: 20 }, 8: { pna: 15145, affaires: 14 }, 9: { pna: 7817, affaires: 9 },
+                    10: { pna: 13915, affaires: 15 }, 11: { pna: 17019, affaires: 17 }, 12: { pna: 28898, affaires: 23 }
+                },
+                "Messa": {
+                    1: { pna: 27380, affaires: 25 }, 2: { pna: 14630, affaires: 13 }, 3: { pna: 19723, affaires: 20 },
+                    4: { pna: 5240, affaires: 5 }, 5: { pna: 18442, affaires: 10 }, 6: { pna: 21444, affaires: 10 },
+                    7: { pna: 7936, affaires: 6 }, 8: { pna: 5165, affaires: 5 }, 9: { pna: 14959, affaires: 15 },
+                    10: { pna: 19960, affaires: 13 }, 11: { pna: 11969, affaires: 8 }, 12: { pna: 6525, affaires: 6 }
+                }
+            };
+
+            const moisNoms = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+                              'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+
+            try {
+                showNotification('🔄 Import en cours...', 'info');
+                let count = 0;
+
+                for (const [commercial, moisData] of Object.entries(objectifs)) {
+                    for (const [mois, data] of Object.entries(moisData)) {
+                        if (data.pna > 0 || data.affaires > 0) {
+                            await db.collection('objectifs').add({
+                                commercial: commercial,
+                                annee: 2025,
+                                mois: parseInt(mois),
+                                moisNom: moisNoms[parseInt(mois) - 1],
+                                productionSignee: data.pna,
+                                nbAffaires: data.affaires
+                            });
+                            count++;
+                        }
+                    }
+                }
+
+                showNotification(`✅ ${count} objectifs importés avec succès !`, 'success');
+                return true;
+            } catch (error) {
+                console.error('Erreur import:', error);
+                showNotification('❌ Erreur lors de l\'import', 'error');
+                return false;
+            }
+        }
+        
         // ========== APPLICATION PRINCIPALE ==========
         
         function App() {
