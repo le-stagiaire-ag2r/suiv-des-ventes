@@ -580,29 +580,27 @@ function ChallengeCard({ currentUser, ventes, objectifs, filters }) {
     };
 
     const colorAffaires = getColor(pourcentageAffaires);
-    const colorPNA = getColor(pourcentagePNA);
-    const moisNom = new Date(0, currentMonth - 1).toLocaleDateString('fr-FR', { month: 'long' });
-
-    if (objectifAnneDerniere.nbAffaires === 0 && objectifAnneDerniere.productionSignee === 0) {
-        return null;
-    }
-
-    return (
-        const moisAnneeLabel = filters.viewMode === 'annuel' 
+const colorPNA = getColor(pourcentagePNA);
+const moisNom = new Date(0, currentMonth - 1).toLocaleDateString('fr-FR', { month: 'long' });
+const moisAnneeLabel = filters.viewMode === 'annuel' 
     ? `Année ${currentYear}` 
     : `${moisNom.charAt(0).toUpperCase() + moisNom.slice(1)} ${currentYear}`;
+
+if (objectifAnneDerniere.nbAffaires === 0 && objectifAnneDerniere.productionSignee === 0) {
+    return null;
+}
 
 return (
     <div className="card" style={{
         background: 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)',
-        border: `2px solid ${statut.color}30`
+        border: '2px solid #e5e7eb'
     }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937' }}>
                 📊 Comparatif 2025 / 2026 - {moisAnneeLabel}
             </h3>
         </div>
-
+        
             <div style={{ marginBottom: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                     <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#374151' }}>
