@@ -518,32 +518,51 @@ function CommentModal({ vente, onClose }) {
 
         // ========== COMPOSANTS CHALLENGE ==========
 
-function ChallengeCard({ currentUser, ventes, objectifs }) {
-    const [currentMonth] = React.useState(new Date().getMonth() + 1);
-    const [currentYear] = React.useState(new Date().getFullYear());
+function ChallengeCard({ currentUser, ventes, objectifs, filters }) {
+    const currentMonth = filters.month;
+    const currentYear = filters.year;
 
-    const statsActuelles = React.useMemo(() => {
-        const ventesCommercial = ventes.filter(v => {
-            const date = new Date(v.jourRdv);
+   const statsActuelles = React.useMemo(() => {
+    const ventesCommercial = ventes.filter(v => {
+        const date = new Date(v.jourRdv);
+        if (filters.viewMode === 'annuel') {
+            return v.commercial === currentUser.name 
+                && date.getFullYear() === currentYear;
+        } else {
             return v.commercial === currentUser.name 
                 && date.getMonth() + 1 === currentMonth
                 && date.getFullYear() === currentYear;
-        });
+        }
+    });
 
+    return {
+        nbAffaires: ventesCommercial.length,
+        pna: ventesCommercial.reduce((sum, v) => sum + (parseFloat(v.pna) || 0), 0)
+    };
+}, [ventes, currentUser.name, currentMonth, currentYear, filters.viewMode]);
+
+   const objectifAnneDerniere = React.useMemo(() => {
+    if (filters.viewMode === 'annuel') {
+        // Mode annuel : sommer tous les mois
+        const objectifsAnnee = objectifs.filter(o => 
+            o.commercial.toLowerCase().includes(currentUser.name.toLowerCase().split(' ')[0])
+            && o.annee === 2025
+        );
+        
         return {
-            nbAffaires: ventesCommercial.length,
-            pna: ventesCommercial.reduce((sum, v) => sum + (parseFloat(v.pna) || 0), 0)
+            productionSignee: objectifsAnnee.reduce((sum, o) => sum + o.productionSignee, 0),
+            nbAffaires: objectifsAnnee.reduce((sum, o) => sum + o.nbAffaires, 0)
         };
-    }, [ventes, currentUser.name, currentMonth, currentYear]);
-
-    const objectifAnneDerniere = React.useMemo(() => {
+    } else {
+        // Mode mensuel : un seul mois
         const obj = objectifs.find(o => 
             o.commercial.toLowerCase().includes(currentUser.name.toLowerCase().split(' ')[0])
             && o.mois === currentMonth
             && o.annee === 2025
         );
         return obj || { productionSignee: 0, nbAffaires: 0 };
-    }, [objectifs, currentUser.name, currentMonth, currentYear]);
+    }
+}, [objectifs, currentUser.name, currentMonth, currentYear, filters.viewMode]);
 
     const pourcentageAffaires = objectifAnneDerniere.nbAffaires > 0
         ? (statsActuelles.nbAffaires / objectifAnneDerniere.nbAffaires) * 100
@@ -568,7 +587,7 @@ function ChallengeCard({ currentUser, ventes, objectifs }) {
         if (avg >= 120) return { emoji: '🔵', text: 'Dépassement exceptionnel !', color: '#06b6d4' };
         if (avg >= 100) return { emoji: '🟢', text: 'Objectif atteint !', color: '#10b981' };
         if (avg >= 70) return { emoji: '🟡', text: 'En bonne voie', color: '#f59e0b' };
-        return { emoji: '🔴', text: 'À intensifier', color: '#ef4444' };
+        return { emoji: '🔴', text: 'Courage', color: '#ef4444' };
     };
 
     const statut = getStatut();
@@ -791,14 +810,14 @@ function ChallengeCard({ currentUser, ventes, objectifs }) {
                 ))}
             </div>
 
-            {/* ===== CHALLENGE VS ANNÉE DERNIÈRE ===== */}
             {currentUser.type === 'commercial' && (
-                <ChallengeCard
-                    currentUser={currentUser}
-                    ventes={ventes}
-                    objectifs={objectifs}
-                />
-            )}
+    <ChallengeCard
+        currentUser={currentUser}
+        ventes={ventes}
+        objectifs={objectifs}
+        filters={filters}
+    />
+)}
 
 {/* Performance par Permanence/Agence AMÉLIORÉ */}
 <div className="card">
