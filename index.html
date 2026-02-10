@@ -725,7 +725,7 @@ function ChallengeCard({ currentUser, ventes, objectifs, filters }) {
 // ========== DASHBOARD ==========
         // ========== DASHBOARD ==========
         
-      function Dashboard({ ventes, currentUser, permanences, objectifs }) {
+      function Dashboard({ ventes, currentUser, permanences, objectifs, filters }) {
     const stats = useMemo(() => {
         const totalVentes = ventes.length;
         const totalCA = ventes.reduce((sum, v) => sum + (parseFloat(v.chiffreAffaires) || 0), 0);
@@ -2894,8 +2894,8 @@ const handleSubmitPermanence = async (permData) => {
                         ventesCount={filteredVentes.length}
                     />
 
-             {currentView === 'dashboard' && (
-    <Dashboard ventes={filteredVentes} currentUser={currentUser} permanences={permanences} objectifs={objectifs} />
+            {currentView === 'dashboard' && (
+    <Dashboard ventes={filteredVentes} currentUser={currentUser} permanences={permanences} objectifs={objectifs} filters={filters} />
 )}
 
                    {currentView === 'permanences' && currentUser.type === 'commercial' && (
