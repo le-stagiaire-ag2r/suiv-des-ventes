@@ -581,16 +581,6 @@ function ChallengeCard({ currentUser, ventes, objectifs, filters }) {
 
     const colorAffaires = getColor(pourcentageAffaires);
     const colorPNA = getColor(pourcentagePNA);
-
-    const getStatut = () => {
-        const avg = (pourcentageAffaires + pourcentagePNA) / 2;
-        if (avg >= 120) return { emoji: '🔵', text: 'Dépassement exceptionnel !', color: '#06b6d4' };
-        if (avg >= 100) return { emoji: '🟢', text: 'Objectif atteint !', color: '#10b981' };
-        if (avg >= 70) return { emoji: '🟡', text: 'En bonne voie', color: '#f59e0b' };
-        return { emoji: '🔴', text: 'Courage', color: '#ef4444' };
-    };
-
-    const statut = getStatut();
     const moisNom = new Date(0, currentMonth - 1).toLocaleDateString('fr-FR', { month: 'long' });
 
     if (objectifAnneDerniere.nbAffaires === 0 && objectifAnneDerniere.productionSignee === 0) {
@@ -598,28 +588,20 @@ function ChallengeCard({ currentUser, ventes, objectifs, filters }) {
     }
 
     return (
-        <div className="card" style={{
-            background: 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)',
-            border: `2px solid ${statut.color}30`
-        }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937' }}>
-                    🏆 Challenge {moisNom} {currentYear}
-                </h3>
-                <div style={{
-                    padding: '0.5rem 1rem',
-                    background: statut.color,
-                    color: 'white',
-                    borderRadius: '9999px',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                }}>
-                    {statut.emoji} {statut.text}
-                </div>
-            </div>
+        const moisAnneeLabel = filters.viewMode === 'annuel' 
+    ? `Année ${currentYear}` 
+    : `${moisNom.charAt(0).toUpperCase() + moisNom.slice(1)} ${currentYear}`;
+
+return (
+    <div className="card" style={{
+        background: 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)',
+        border: `2px solid ${statut.color}30`
+    }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937' }}>
+                📊 Comparatif 2025 / 2026 - {moisAnneeLabel}
+            </h3>
+        </div>
 
             <div style={{ marginBottom: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
@@ -638,12 +620,14 @@ function ChallengeCard({ currentUser, ventes, objectifs, filters }) {
                     overflow: 'hidden'
                 }}>
                     <div style={{
-                        height: '100%',
-                        width: `${Math.min(pourcentageAffaires, 100)}%`,
-                        background: `linear-gradient(90deg, ${colorAffaires}, ${colorAffaires}dd)`,
-                        borderRadius: '12px',
-                        transition: 'width 1s ease-out'
-                    }}></div>
+    height: '100%',
+    width: `${Math.min(pourcentageAffaires, 100)}%`,
+    background: `linear-gradient(90deg, #ef4444 0%, #f59e0b 40%, #eab308 70%, #10b981 90%, #06b6d4 100%)`,
+    borderRadius: '12px',
+    transition: 'width 1s ease-out',
+    backgroundSize: '100% 100%',
+    backgroundPosition: `${(100 - Math.min(pourcentageAffaires, 100))}% 0`
+}}></div>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontSize: '0.875rem' }}>
@@ -687,12 +671,14 @@ function ChallengeCard({ currentUser, ventes, objectifs, filters }) {
                     overflow: 'hidden'
                 }}>
                     <div style={{
-                        height: '100%',
-                        width: `${Math.min(pourcentagePNA, 100)}%`,
-                        background: `linear-gradient(90deg, ${colorPNA}, ${colorPNA}dd)`,
-                        borderRadius: '12px',
-                        transition: 'width 1s ease-out'
-                    }}></div>
+    height: '100%',
+    width: `${Math.min(pourcentagePNA, 100)}%`,
+    background: `linear-gradient(90deg, #ef4444 0%, #f59e0b 40%, #eab308 70%, #10b981 90%, #06b6d4 100%)`,
+    borderRadius: '12px',
+    transition: 'width 1s ease-out',
+    backgroundSize: '100% 100%',
+    backgroundPosition: `${(100 - Math.min(pourcentagePNA, 100))}% 0`
+}}></div>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontSize: '0.875rem' }}>
