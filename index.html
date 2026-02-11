@@ -617,18 +617,22 @@ return (
                     borderRadius: '12px',
                     overflow: 'hidden'
                 }}>
-                   <div style={{
+                  <div style={{
     height: '100%',
     width: `${Math.min(pourcentageAffaires, 100)}%`,
-    background: `linear-gradient(90deg, 
-        #ef4444 0%, 
-        ${pourcentageAffaires > 30 ? '#f97316 30%' : '#ef4444 100%'},
-        ${pourcentageAffaires > 50 ? '#f59e0b 50%' : ''},
-        ${pourcentageAffaires > 70 ? '#eab308 70%' : ''},
-        ${pourcentageAffaires > 85 ? '#10b981 85%' : ''},
-        ${pourcentageAffaires > 100 ? '#059669 100%' : ''},
-        ${pourcentageAffaires > 120 ? '#06b6d4 120%' : ''}
-    )`.replace(/,\s*,/g, ',').replace(/,\s*\)/g, ')'),
+    background: pourcentageAffaires < 30 
+        ? 'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)'
+        : pourcentageAffaires < 50 
+        ? 'linear-gradient(90deg, #ef4444 0%, #f97316 100%)'
+        : pourcentageAffaires < 70
+        ? 'linear-gradient(90deg, #ef4444 0%, #f97316 40%, #f59e0b 100%)'
+        : pourcentageAffaires < 85
+        ? 'linear-gradient(90deg, #ef4444 0%, #f97316 30%, #f59e0b 60%, #eab308 100%)'
+        : pourcentageAffaires < 100
+        ? 'linear-gradient(90deg, #ef4444 0%, #f97316 25%, #f59e0b 50%, #eab308 75%, #10b981 100%)'
+        : pourcentageAffaires < 120
+        ? 'linear-gradient(90deg, #ef4444 0%, #f97316 20%, #f59e0b 40%, #eab308 60%, #10b981 80%, #059669 100%)'
+        : 'linear-gradient(90deg, #ef4444 0%, #f97316 17%, #f59e0b 34%, #eab308 51%, #10b981 68%, #059669 85%, #06b6d4 100%)',
     borderRadius: '12px',
     transition: 'all 1s ease-out'
 }}></div>
@@ -677,15 +681,19 @@ return (
                     <div style={{
     height: '100%',
     width: `${Math.min(pourcentagePNA, 100)}%`,
-    background: `linear-gradient(90deg, 
-        #ef4444 0%, 
-        ${pourcentagePNA > 30 ? '#f97316 30%' : '#ef4444 100%'},
-        ${pourcentagePNA > 50 ? '#f59e0b 50%' : ''},
-        ${pourcentagePNA > 70 ? '#eab308 70%' : ''},
-        ${pourcentagePNA > 85 ? '#10b981 85%' : ''},
-        ${pourcentagePNA > 100 ? '#059669 100%' : ''},
-        ${pourcentagePNA > 120 ? '#06b6d4 120%' : ''}
-    )`.replace(/,\s*,/g, ',').replace(/,\s*\)/g, ')'),
+    background: pourcentagePNA < 30 
+        ? 'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)'
+        : pourcentagePNA < 50 
+        ? 'linear-gradient(90deg, #ef4444 0%, #f97316 100%)'
+        : pourcentagePNA < 70
+        ? 'linear-gradient(90deg, #ef4444 0%, #f97316 40%, #f59e0b 100%)'
+        : pourcentagePNA < 85
+        ? 'linear-gradient(90deg, #ef4444 0%, #f97316 30%, #f59e0b 60%, #eab308 100%)'
+        : pourcentagePNA < 100
+        ? 'linear-gradient(90deg, #ef4444 0%, #f97316 25%, #f59e0b 50%, #eab308 75%, #10b981 100%)'
+        : pourcentagePNA < 120
+        ? 'linear-gradient(90deg, #ef4444 0%, #f97316 20%, #f59e0b 40%, #eab308 60%, #10b981 80%, #059669 100%)'
+        : 'linear-gradient(90deg, #ef4444 0%, #f97316 17%, #f59e0b 34%, #eab308 51%, #10b981 68%, #059669 85%, #06b6d4 100%)',
     borderRadius: '12px',
     transition: 'all 1s ease-out'
 }}></div>
