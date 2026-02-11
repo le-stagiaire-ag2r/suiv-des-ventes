@@ -620,11 +620,15 @@ return (
                     <div style={{
     height: '100%',
     width: `${Math.min(pourcentageAffaires, 100)}%`,
-    background: `linear-gradient(90deg, #ef4444 0%, #f59e0b 40%, #eab308 70%, #10b981 90%, #06b6d4 100%)`,
+    background: pourcentageAffaires < 30 ? '#ef4444' :
+                pourcentageAffaires < 50 ? '#f97316' :
+                pourcentageAffaires < 70 ? '#f59e0b' :
+                pourcentageAffaires < 85 ? '#eab308' :
+                pourcentageAffaires < 100 ? '#10b981' :
+                pourcentageAffaires < 120 ? '#059669' :
+                '#06b6d4',
     borderRadius: '12px',
-    transition: 'width 1s ease-out',
-    backgroundSize: '100% 100%',
-    backgroundPosition: `${(100 - Math.min(pourcentageAffaires, 100))}% 0`
+    transition: 'all 1s ease-out'
 }}></div>
                 </div>
 
@@ -671,11 +675,15 @@ return (
                     <div style={{
     height: '100%',
     width: `${Math.min(pourcentagePNA, 100)}%`,
-    background: `linear-gradient(90deg, #ef4444 0%, #f59e0b 40%, #eab308 70%, #10b981 90%, #06b6d4 100%)`,
+    background: pourcentagePNA < 30 ? '#ef4444' :
+                pourcentagePNA < 50 ? '#f97316' :
+                pourcentagePNA < 70 ? '#f59e0b' :
+                pourcentagePNA < 85 ? '#eab308' :
+                pourcentagePNA < 100 ? '#10b981' :
+                pourcentagePNA < 120 ? '#059669' :
+                '#06b6d4',
     borderRadius: '12px',
-    transition: 'width 1s ease-out',
-    backgroundSize: '100% 100%',
-    backgroundPosition: `${(100 - Math.min(pourcentagePNA, 100))}% 0`
+    transition: 'all 1s ease-out'
 }}></div>
                 </div>
 
