@@ -378,8 +378,9 @@ function CommentModal({ vente, onClose }) {
         
         function Header({ currentUser, currentView, setCurrentView, filters, setFilters, onLogout, onExport, ventesCount }) {
             const commerciaux = Object.keys(currentUser.allUsers || {})
-                .filter(email => currentUser.allUsers[email].type === 'commercial')
-                .map(email => currentUser.allUsers[email]);
+    .filter(email => currentUser.allUsers[email].type === 'commercial')
+    .map(email => currentUser.allUsers[email])
+    .sort((a, b) => a.name.localeCompare(b.name));
 
             return (
                 <div className="header">
@@ -1404,14 +1405,14 @@ return (
             }, [editingVente]);
 
             const rattachementOptions = useMemo(() => {
-                let options = [];
-                if (currentUser.type === 'commercial') {
-                    options.push(currentUser.agence);
-                    options = options.concat(currentUser.permanences || []);
-                }
-                options = options.concat(config.rattachements || []);
-                return [...new Set(options)];
-            }, [currentUser, config.rattachements]);
+    let options = [];
+    if (currentUser.type === 'commercial') {
+        options.push(currentUser.agence);
+        options = options.concat(currentUser.permanences || []);
+    }
+    options = options.concat(config.rattachements || []);
+    return [...new Set(options)].sort((a, b) => a.localeCompare(b));
+}, [currentUser, config.rattachements]);
 
             const handleSubmit = (e) => {
                 e.preventDefault();
@@ -1625,14 +1626,14 @@ function EnregistrerPermanence({ currentUser, config, onSubmit }) {
     });
 
     const rattachementOptions = useMemo(() => {
-        let options = [];
-        if (currentUser.type === 'commercial') {
-            options.push(currentUser.agence);
-            options = options.concat(currentUser.permanences || []);
-        }
-        options = options.concat(config.rattachements || []);
-        return [...new Set(options)];
-    }, [currentUser, config.rattachements]);
+    let options = [];
+    if (currentUser.type === 'commercial') {
+        options.push(currentUser.agence);
+        options = options.concat(currentUser.permanences || []);
+    }
+    options = options.concat(config.rattachements || []);
+    return [...new Set(options)].sort((a, b) => a.localeCompare(b));
+}, [currentUser, config.rattachements]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
