@@ -1837,29 +1837,32 @@ function ListePermanences({ permanences, currentUser, onDelete }) {
                     );
                 }
 
-                // Tri
-                filtered.sort((a, b) => {
-                    let aVal = a[sortBy] || '';
-                    let bVal = b[sortBy] || '';
+               // Tri
+filtered.sort((a, b) => {
+    let aVal, bVal;
 
-                    if (sortBy === 'chiffreAffaires' || sortBy === 'pna') {
-                        aVal = parseFloat(aVal) || 0;
-                        bVal = parseFloat(bVal) || 0;
-                    } else if (sortBy === 'dateCreation' || sortBy === 'jourRdv' || sortBy === 'dateEffet') {
-                        aVal = new Date(aVal || 0);
-                        bVal = new Date(bVal || 0);
-                    } else {
-                        aVal = String(aVal).toLowerCase();
-                        bVal = String(bVal).toLowerCase();
-                    }
+    if (sortBy === 'nom') {
+        // Tri par nom complet (nom + prénom)
+        aVal = `${a.nom || ''} ${a.prenom || ''}`.toLowerCase().trim();
+        bVal = `${b.nom || ''} ${b.prenom || ''}`.toLowerCase().trim();
+    } else if (sortBy === 'chiffreAffaires' || sortBy === 'pna') {
+        aVal = parseFloat(a[sortBy]) || 0;
+        bVal = parseFloat(b[sortBy]) || 0;
+    } else if (sortBy === 'dateCreation' || sortBy === 'jourRdv' || sortBy === 'dateEffet') {
+        aVal = new Date(a[sortBy] || 0);
+        bVal = new Date(b[sortBy] || 0);
+    } else {
+        aVal = String(a[sortBy] || '').toLowerCase();
+        bVal = String(b[sortBy] || '').toLowerCase();
+    }
 
-                    if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
-                    if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
-                    return 0;
-                });
+    if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+});
 
-                return filtered;
-            }, [ventes, searchTerm, sortBy, sortOrder]);
+return filtered;
+}, [ventes, searchTerm, sortBy, sortOrder]);
 
             const periodeName = filters.viewMode === 'annuel' 
                 ? `Année ${filters.year}`
