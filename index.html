@@ -1821,7 +1821,7 @@ function ListePermanences({ permanences, currentUser, onDelete }) {
         function ListeVentes({ ventes, currentUser, filters, onEdit, onDelete, onUpdateStatut, selectedCommentVente, setSelectedCommentVente }) {
             const [searchTerm, setSearchTerm] = useState('');
             const [sortBy, setSortBy] = useState('dateCreation');
-            const [sortOrder, setSortOrder] = useState('desc');
+            const [sortOrder, setSortOrder] = useState('asc');
            
             const filteredAndSortedVentes = useMemo(() => {
                 let filtered = ventes;
