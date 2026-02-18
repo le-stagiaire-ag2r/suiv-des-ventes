@@ -519,8 +519,9 @@ function CommentModal({ vente, onClose }) {
         // ========== COMPOSANTS CHALLENGE ==========
 
 function ChallengeCard({ currentUser, ventes, objectifs, filters }) {
+    const [isVisible, setIsVisible] = React.useState(true);
     const currentMonth = filters.month;
-    const currentYear = filters.year;
+    const currentYear = filters.year;;
 
    const statsActuelles = React.useMemo(() => {
     const ventesCommercial = ventes.filter(v => {
@@ -586,8 +587,23 @@ const moisAnneeLabel = filters.viewMode === 'annuel'
     ? `Année ${currentYear}` 
     : `${moisNom.charAt(0).toUpperCase() + moisNom.slice(1)} ${currentYear}`;
 
-if (objectifAnneDerniere.nbAffaires === 0 && objectifAnneDerniere.productionSignee === 0) {
-    return null;
+if (!isVisible) {
+    return (
+        <div className="card" style={{
+            background: 'linear-gradient(135deg, #f3f4f615 0%, #e5e7eb15 100%)',
+            border: '2px solid #e5e7eb',
+            padding: '1rem',
+            textAlign: 'center'
+        }}>
+            <button
+                className="btn btn-secondary"
+                onClick={() => setIsVisible(true)}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 auto' }}
+            >
+                👁️ Afficher le comparatif 2025/2026
+            </button>
+        </div>
+    );
 }
 
 return (
@@ -595,10 +611,17 @@ return (
         background: 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)',
         border: '2px solid #e5e7eb'
     }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937' }}>
                 📊 Comparatif 2025 / 2026 - {moisAnneeLabel}
             </h3>
+            <button
+                className="btn btn-secondary"
+                onClick={() => setIsVisible(false)}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+            >
+                👁️‍🗨️ Masquer
+            </button>
         </div>
         
             <div style={{ marginBottom: '2rem' }}>
