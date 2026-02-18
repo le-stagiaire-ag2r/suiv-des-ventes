@@ -520,9 +520,17 @@ function CommentModal({ vente, onClose }) {
         // ========== COMPOSANTS CHALLENGE ==========
 
 function ChallengeCard({ currentUser, ventes, objectifs, filters }) {
-    const [isVisible, setIsVisible] = React.useState(true);
+    const [isVisible, setIsVisible] = React.useState(() => {
+        const saved = localStorage.getItem(`challenge_visible_${currentUser.email}`);
+        return saved !== null ? JSON.parse(saved) : true;
+    });
+
+    React.useEffect(() => {
+        localStorage.setItem(`challenge_visible_${currentUser.email}`, JSON.stringify(isVisible));
+    }, [isVisible, currentUser.email]);
+
     const currentMonth = filters.month;
-    const currentYear = filters.year;;
+    const currentYear = filters.year;
 
    const statsActuelles = React.useMemo(() => {
     const ventesCommercial = ventes.filter(v => {
