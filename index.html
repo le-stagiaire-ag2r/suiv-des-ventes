@@ -378,7 +378,7 @@ function CommentModal({ vente, onClose }) {
         
         function Header({ currentUser, currentView, setCurrentView, filters, setFilters, onLogout, onExport, ventesCount }) {
             const commerciaux = Object.keys(currentUser.allUsers || {})
-    .filter(email => currentUser.allUsers[email].type === 'commercial')
+    .filter(email => currentUser.allUsers[email].type === 'commercial' && currentUser.allUsers[email].region === currentUser.region)
     .map(email => currentUser.allUsers[email])
     .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -1205,9 +1205,9 @@ return (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
             {(() => {
                 // Récupérer tous les commerciaux
-                const allCommerciaux = Object.keys(currentUser.allUsers || {})
-                    .filter(email => currentUser.allUsers[email].type === 'commercial')
-                    .map(email => currentUser.allUsers[email].name);
+               const allCommerciaux = Object.keys(currentUser.allUsers || {})
+    .filter(email => currentUser.allUsers[email].type === 'commercial' && currentUser.allUsers[email].region === currentUser.region)
+    .map(email => currentUser.allUsers[email].name);
 
                 // Créer les stats pour tous les commerciaux
                 const commerciauxStats = {};
@@ -1426,10 +1426,10 @@ return (
                 e.preventDefault();
                 
                 const venteData = {
-                    ...formData,
-                    commercial: currentUser.name
-                };
-
+    ...formData,
+    commercial: currentUser.name,
+    region: currentUser.region
+};
                 if (editingVente) {
                     venteData.id = editingVente.id;
                     venteData.dateCreation = editingVente.dateCreation;
@@ -1647,12 +1647,13 @@ function EnregistrerPermanence({ currentUser, config, onSubmit }) {
         e.preventDefault();
         
         const permData = {
-            commercial: currentUser.name,
-            rattachement: formData.rattachement,
-            type: formData.type,
-            jours: formData.type === 'entiere' ? 1 : 0.5,
-            dateCreation: new Date().toLocaleString('fr-FR')
-        };
+    commercial: currentUser.name,
+    rattachement: formData.rattachement,
+    type: formData.type,
+    jours: formData.type === 'entiere' ? 1 : 0.5,
+    dateCreation: new Date().toLocaleString('fr-FR'),
+    region: currentUser.region
+};
 
         onSubmit(permData);
         setFormData({ rattachement: '', type: 'entiere' });
@@ -2691,15 +2692,18 @@ return () => {
 }, [currentUser]);
 
             // Filtrer les ventes
-            const filteredVentes = useMemo(() => {
-                let filtered = ventes;
+           const filteredVentes = useMemo(() => {
+    let filtered = ventes;
 
-                // Filtre par commercial
-                if (currentUser?.type === 'commercial') {
-                    filtered = filtered.filter(v => v.commercial === currentUser.name);
-                } else if (currentUser?.type === 'admin' && filters.commercial !== 'tous') {
-                    filtered = filtered.filter(v => v.commercial === filters.commercial);
-                }
+    // Filtre par région
+    filtered = filtered.filter(v => v.region === currentUser.region);
+
+    // Filtre par commercial
+    if (currentUser?.type === 'commercial') {
+        filtered = filtered.filter(v => v.commercial === currentUser.name);
+    } else if (currentUser?.type === 'admin' && filters.commercial !== 'tous') {
+        filtered = filtered.filter(v => v.commercial === filters.commercial);
+    }
 
                 // Filtre par période
                 filtered = filtered.filter(v => {
