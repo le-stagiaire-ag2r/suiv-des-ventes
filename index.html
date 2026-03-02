@@ -2696,7 +2696,7 @@ return () => {
     let filtered = ventes;
 
     // Filtre par région
-    filtered = filtered.filter(v => v.region === currentUser.region);
+    filtered = filtered.filter(v => v.region === currentUser?.region);
 
     // Filtre par commercial
     if (currentUser?.type === 'commercial') {
