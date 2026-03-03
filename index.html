@@ -975,63 +975,163 @@ return (
         })()}
     </div>
 </div>
-            {/* ===== TAUX DE CONVERSION ===== */}
-            <div className="card">
-                <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
-                    📞 Taux de Conversion - Tél vs Face à face
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ 
-                            width: '120px', 
-                            height: '120px',
-                            borderRadius: '50%',
-                            background: `conic-gradient(#3b82f6 0deg ${tauxConversionTel * 3.6}deg, #e5e7eb ${tauxConversionTel * 3.6}deg 360deg)`,
-                            margin: '0 auto 1rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '2rem',
-                            fontWeight: 'bold',
-                            color: '000000'
-                        }}>
-                            {tauxConversionTel}%
-                        </div>
-                        <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>Téléphone</div>
-                        <div style={{ fontSize: '1.125rem', fontWeight: '600' }}>
-                            {stats.telVsFaceAFace['Tél']} ventes
-                        </div>
-                    </div>
+           {/* ===== TAUX DE CONVERSION ===== */}
+<div className="card">
+    <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
+        📞 Taux de Conversion - Tél vs Face à face
+    </h3>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+        <div style={{ textAlign: 'center' }}>
+            <div style={{ 
+                width: '120px', height: '120px', borderRadius: '50%',
+                background: `conic-gradient(#3b82f6 0deg ${tauxConversionTel * 3.6}deg, #e5e7eb ${tauxConversionTel * 3.6}deg 360deg)`,
+                margin: '0 auto 1rem', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', fontSize: '2rem', fontWeight: 'bold', color: '000000'
+            }}>
+                {tauxConversionTel}%
+            </div>
+            <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Téléphone</div>
+            <div style={{ fontSize: '1.125rem', fontWeight: '600' }}>{stats.telVsFaceAFace['Tél']} ventes</div>
+            <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#3b82f6', marginTop: '0.25rem' }}>
+                PNA : {ventes.filter(v => v.vente === 'Tél').reduce((sum, v) => sum + (parseFloat(v.pna) || 0), 0).toFixed(2)}€
+            </div>
+        </div>
 
+        <div style={{ textAlign: 'center' }}>
+            <div style={{ 
+                width: '120px', height: '120px', borderRadius: '50%',
+                background: `conic-gradient(#10b981 0deg ${tauxConversionFace * 3.6}deg, #e5e7eb ${tauxConversionFace * 3.6}deg 360deg)`,
+                margin: '0 auto 1rem', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', fontSize: '2rem', fontWeight: 'bold', color: '#000000'
+            }}>
+                {tauxConversionFace}%
+            </div>
+            <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Face à face</div>
+            <div style={{ fontSize: '1.125rem', fontWeight: '600' }}>{stats.telVsFaceAFace['Face à face']} ventes</div>
+            <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#10b981', marginTop: '0.25rem' }}>
+                PNA : {ventes.filter(v => v.vente === 'Face à face').reduce((sum, v) => sum + (parseFloat(v.pna) || 0), 0).toFixed(2)}€
+            </div>
+        </div>
+    </div>
+</div>
+
+           {/* ===== GRAPHIQUE VENTES PAR PRODUIT (DONUT) ===== */}
+<div className="card">
+    <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
+        📦 Répartition par Produit
+    </h3>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+
+        {/* CAMEMBERT TÉL */}
+        {(() => {
+            const ventesTel = ventes.filter(v => v.vente === 'Tél');
+            const produitsRepartition = {};
+            ventesTel.forEach(v => {
+                if (v.contrat) produitsRepartition[v.contrat] = (produitsRepartition[v.contrat] || 0) + 1;
+            });
+            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+            let angle = 0;
+            const produits = Object.entries(produitsRepartition).sort((a, b) => b[1] - a[1]).slice(0, 6);
+            return (
+                <div>
+                    <h4 style={{ textAlign: 'center', marginBottom: '1rem', color: '#3b82f6', fontWeight: '600' }}>
+                        📞 Téléphone ({ventesTel.length} ventes)
+                    </h4>
                     <div style={{ textAlign: 'center' }}>
-                        <div style={{ 
-                            width: '120px', 
-                            height: '120px',
-                            borderRadius: '50%',
-                            background: `conic-gradient(#10b981 0deg ${tauxConversionFace * 3.6}deg, #e5e7eb ${tauxConversionFace * 3.6}deg 360deg)`,
-                            margin: '0 auto 1rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '2rem',
-                            fontWeight: 'bold',
-                            color: '#000000'
-        }}>
-                            {tauxConversionFace}%
+                        <div style={{ position: 'relative', width: '160px', height: '160px', margin: '0 auto 1rem' }}>
+                            <svg width="160" height="160" style={{ transform: 'rotate(-90deg)' }}>
+                                {produits.map(([produit, count], idx) => {
+                                    const percentage = (count / ventesTel.length) * 100;
+                                    const sliceAngle = (percentage / 100) * 360;
+                                    const radius = 60;
+                                    const circumference = 2 * Math.PI * radius;
+                                    const strokeDashoffset = circumference - (sliceAngle / 360) * circumference;
+                                    const currentAngle = angle;
+                                    angle += sliceAngle;
+                                    return (
+                                        <circle key={produit} cx="80" cy="80" r={radius}
+                                            fill="none" stroke={colors[idx]} strokeWidth="28"
+                                            strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
+                                            style={{ transform: `rotate(${currentAngle}deg)`, transformOrigin: '80px 80px' }}
+                                        />
+                                    );
+                                })}
+                            </svg>
                         </div>
-                        <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>Face à face</div>
-                        <div style={{ fontSize: '1.125rem', fontWeight: '600' }}>
-                            {stats.telVsFaceAFace['Face à face']} ventes
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            {produits.map(([produit, count], idx) => (
+                                <div key={produit} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'space-between' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: colors[idx] }}></div>
+                                        <span style={{ fontSize: '0.8rem' }}>{produit}</span>
+                                    </div>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: '600', color: colors[idx] }}>
+                                        {count} ({((count / ventesTel.length) * 100).toFixed(1)}%)
+                                    </span>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
-            </div>
+            );
+        })()}
 
-            {/* ===== GRAPHIQUE VENTES PAR PRODUIT (DONUT) ===== */}
-            <div className="card">
-                <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
-                    📦 Répartition par Produit
-                </h3>
+        {/* CAMEMBERT FACE À FACE */}
+        {(() => {
+            const ventesFace = ventes.filter(v => v.vente === 'Face à face');
+            const produitsRepartition = {};
+            ventesFace.forEach(v => {
+                if (v.contrat) produitsRepartition[v.contrat] = (produitsRepartition[v.contrat] || 0) + 1;
+            });
+            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+            let angle = 0;
+            const produits = Object.entries(produitsRepartition).sort((a, b) => b[1] - a[1]).slice(0, 6);
+            return (
+                <div>
+                    <h4 style={{ textAlign: 'center', marginBottom: '1rem', color: '#10b981', fontWeight: '600' }}>
+                        🤝 Face à face ({ventesFace.length} ventes)
+                    </h4>
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ position: 'relative', width: '160px', height: '160px', margin: '0 auto 1rem' }}>
+                            <svg width="160" height="160" style={{ transform: 'rotate(-90deg)' }}>
+                                {produits.map(([produit, count], idx) => {
+                                    const percentage = (count / ventesFace.length) * 100;
+                                    const sliceAngle = (percentage / 100) * 360;
+                                    const radius = 60;
+                                    const circumference = 2 * Math.PI * radius;
+                                    const strokeDashoffset = circumference - (sliceAngle / 360) * circumference;
+                                    const currentAngle = angle;
+                                    angle += sliceAngle;
+                                    return (
+                                        <circle key={produit} cx="80" cy="80" r={radius}
+                                            fill="none" stroke={colors[idx]} strokeWidth="28"
+                                            strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
+                                            style={{ transform: `rotate(${currentAngle}deg)`, transformOrigin: '80px 80px' }}
+                                        />
+                                    );
+                                })}
+                            </svg>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            {produits.map(([produit, count], idx) => (
+                                <div key={produit} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'space-between' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: colors[idx] }}></div>
+                                        <span style={{ fontSize: '0.8rem' }}>{produit}</span>
+                                    </div>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: '600', color: colors[idx] }}>
+                                        {count} ({((count / ventesFace.length) * 100).toFixed(1)}%)
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        })()}
+
+    </div>
+</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem' }}>
                     {/* Mini graphique donut */}
                     <div style={{ textAlign: 'center' }}>
