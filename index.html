@@ -1183,35 +1183,6 @@ return (
                         </div>
                     </div>
 
-                    {/* Liste des produits */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        {Object.entries(stats.ventesParProduit)
-                            .sort((a, b) => b[1] - a[1])
-                            .slice(0, 8)
-                            .map(([produit, count], idx) => {
-                                const percentage = ((count / stats.totalVentes) * 100).toFixed(1);
-                                const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
-                                return (
-                                    <div key={produit} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                        <div style={{
-                                            width: '12px',
-                                            height: '12px',
-                                            borderRadius: '2px',
-                                            background: colors[idx]
-                                        }}></div>
-                                        <div style={{ flex: 1, fontSize: '0.875rem' }}>
-                                            {produit}
-                                        </div>
-                                        <div style={{ fontWeight: '600', fontSize: '0.875rem', color: colors[idx] }}>
-                                            {count} ({percentage}%)
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                    </div>
-                </div>
-            </div>
-
             {/* ===== GRAPHIQUE VENTES PAR ORIGINE ===== */}
             <div className="card">
                 <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
