@@ -1132,56 +1132,6 @@ return (
 
     </div>
 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem' }}>
-                    {/* Mini graphique donut */}
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ position: 'relative', width: '180px', height: '180px', margin: '0 auto 1rem' }}>
-                            {(() => {
-                                let angle = 0;
-                                const produits = Object.entries(stats.ventesParProduit)
-                                    .sort((a, b) => b[1] - a[1])
-                                    .slice(0, 6);
-                                const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
-                                
-                                return (
-                                    <svg width="180" height="180" style={{ transform: 'rotate(-90deg)' }}>
-                                        {produits.map(([produit, count], idx) => {
-                                            const percentage = (count / stats.totalVentes) * 100;
-                                            const sliceAngle = (percentage / 100) * 360;
-                                            const radius = 70;
-                                            const circumference = 2 * Math.PI * radius;
-                                            const strokeDashoffset = circumference - (sliceAngle / 360) * circumference;
-                                            
-                                            const currentAngle = angle;
-                                            angle += sliceAngle;
-                                            
-                                            return (
-                                                <circle
-                                                    key={produit}
-                                                    cx="90"
-                                                    cy="90"
-                                                    r={radius}
-                                                    fill="none"
-                                                    stroke={colors[idx]}
-                                                    strokeWidth="30"
-                                                    strokeDasharray={circumference}
-                                                    strokeDashoffset={strokeDashoffset}
-                                                    style={{
-                                                        transform: `rotate(${currentAngle}deg)`,
-                                                        transformOrigin: '90px 90px',
-                                                        transition: 'all 0.3s ease'
-                                                    }}
-                                                />
-                                            );
-                                        })}
-                                    </svg>
-                                );
-                            })()}
-                        </div>
-                        <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                            {Object.keys(stats.ventesParProduit).length} produits
-                        </div>
-                    </div>
 
             {/* ===== GRAPHIQUE VENTES PAR ORIGINE ===== */}
             <div className="card">
