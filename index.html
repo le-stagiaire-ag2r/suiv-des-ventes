@@ -639,14 +639,14 @@ function CommentModal({ vente, onClose }) {
                 </div>
             );
         }
-        // ========== CALENDRIER PLANNING ==========
+       // ========== CALENDRIER PLANNING ==========
 
 function CalendrierPlanning({ currentUser }) {
     const [plannings, setPlannings] = useState({});
     const [selectedDate, setSelectedDate] = useState(new Date());
-    const [viewMode, setViewMode] = useState('mois'); // 'jour', 'semaine', 'mois'
+    const [viewMode, setViewMode] = useState('mois');
     const [showModal, setShowModal] = useState(false);
-    const [editingSlot, setEditingSlot] = useState(null);
+    const [editingDate, setEditingDate] = useState(null);
 
     const [formData, setFormData] = useState({
         statut: 'disponible',
@@ -657,57 +657,84 @@ function CalendrierPlanning({ currentUser }) {
     });
 
     const statutsOptions = [
-        { value: 'disponible', label: 'Disponible', color: '#10b981', icon: '✓' },
-        { value: 'permanence', label: 'En permanence', color: '#3b82f6', icon: '📍', needsLieu: true },
-        { value: 'teletravail', label: 'Télétravail', color: '#8b5cf6', icon: '🏠' },
-        { value: 'conges', label: 'Congés', color: '#f59e0b', icon: '🏖️' },
-        { value: 'maladie', label: 'Arrêt maladie', color: '#ef4444', icon: '🤒' },
-        { value: 'formation', label: 'Formation', color: '#06b6d4', icon: '📚' },
-        { value: 'deplacement', label: 'Déplacement', color: '#ec4899', icon: '🚗', needsLieu: true },
-        { value: 'indisponible', label: 'Indisponible', color: '#6b7280', icon: '❌' }
+        { value: 'disponible', label: 'Disponible', color: '#10b981' },
+        { value: 'permanence', label: 'En permanence', color: '#3b82f6', needsLieu: true },
+        { value: 'teletravail', label: 'Télétravail', color: '#8b5cf6' },
+        { value: 'conges', label: 'Congés', color: '#f59e0b' },
+        { value: 'maladie', label: 'Arrêt maladie', color: '#ef4444' },
+        { value: 'formation', label: 'Formation', color: '#06b6d4' },
+        { value: 'deplacement', label: 'Déplacement', color: '#ec4899', needsLieu: true },
+        { value: 'indisponible', label: 'Indisponible', color: '#6b7280' }
     ];
 
-    // Charger les plannings de tous les commerciaux
+    // Récupérer tous les commerciaux
+    const commerciaux = useMemo(() => {
+        return Object.keys(currentUser.allUsers || {})
+            .filter(email => currentUser.allUsers[email].type === 'commercial' && currentUser.allUsers[email].region === currentUser.region)
+            .map(email => currentUser.allUsers[email])
+            .sort((a, b) => a.name.localeCompare(b.name));
+    }, [currentUser]);
+
+    // Charger les plannings
     useEffect(() => {
-        if (!currentUser) return;
+        if (!currentUser || commerciaux.length === 0) return;
 
         const unsubscribes = [];
-        const allCommerciaux = Object.keys(currentUser.allUsers || {})
-            .filter(email => currentUser.allUsers[email].type === 'commercial');
 
-        allCommerciaux.forEach(email => {
-            const unsubscribe = db.collection('calendrier').doc(email)
-                .collection('dates')
+        commerciaux.forEach(commercial => {
+            const unsubscribe = db.collection('calendrier')
+                .doc(commercial.email)
                 .onSnapshot(snapshot => {
-                    const dates = {};
-                    snapshot.forEach(doc => {
-                        dates[doc.id] = doc.data();
-                    });
-                    setPlannings(prev => ({ ...prev, [email]: dates }));
+                    if (snapshot.exists) {
+                        setPlannings(prev => ({
+                            ...prev,
+                            [commercial.email]: snapshot.data()
+                        }));
+                    }
                 });
             unsubscribes.push(unsubscribe);
         });
 
         return () => unsubscribes.forEach(unsub => unsub());
-    }, [currentUser]);
+    }, [currentUser, commerciaux]);
 
-    const handleSaveSlot = async () => {
-        if (!editingSlot) return;
+    // Générer les jours du mois
+    const getDaysInMonth = () => {
+        const year = selectedDate.getFullYear();
+        const month = selectedDate.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const daysInMonth = lastDay.getDate();
+        const startDayOfWeek = firstDay.getDay() || 7; // Lundi = 1
 
-        const dateStr = editingSlot.toISOString().split('T')[0];
+        const days = [];
         
-        try {
-            await db.collection('calendrier')
-                .doc(currentUser.email)
-                .collection('dates')
-                .doc(dateStr)
-                .set({
-                    ...formData,
-                    dateCreation: new Date().toISOString()
-                });
+        // Jours du mois précédent
+        for (let i = 1; i < startDayOfWeek; i++) {
+            days.push(null);
+        }
+        
+        // Jours du mois actuel
+        for (let i = 1; i <= daysInMonth; i++) {
+            days.push(new Date(year, month, i));
+        }
 
-            setShowModal(false);
-            setEditingSlot(null);
+        return days;
+    };
+
+    const formatDate = (date) => {
+        if (!date) return '';
+        return date.toISOString().split('T')[0];
+    };
+
+    const handleOpenModal = (date) => {
+        setEditingDate(date);
+        const dateStr = formatDate(date);
+        const existing = plannings[currentUser.email]?.[dateStr];
+        
+        if (existing) {
+            setFormData(existing);
+        } else {
             setFormData({
                 statut: 'disponible',
                 lieu: '',
@@ -715,56 +742,272 @@ function CalendrierPlanning({ currentUser }) {
                 heureFin: '18:00',
                 commentaire: ''
             });
+        }
+        
+        setShowModal(true);
+    };
+
+    const handleSave = async () => {
+        if (!editingDate) return;
+
+        const dateStr = formatDate(editingDate);
+        
+        try {
+            await db.collection('calendrier').doc(currentUser.email).set({
+                [dateStr]: {
+                    ...formData,
+                    dateModification: new Date().toISOString()
+                }
+            }, { merge: true });
+
+            setShowModal(false);
+            setEditingDate(null);
         } catch (error) {
             console.error('Erreur sauvegarde:', error);
             alert('Erreur lors de la sauvegarde');
         }
     };
 
+    const getStatutInfo = (statut) => {
+        return statutsOptions.find(s => s.value === statut) || statutsOptions[0];
+    };
+
+    const days = getDaysInMonth();
+    const monthName = selectedDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
     return (
         <div className="container" style={{ paddingTop: '1.5rem' }}>
             <div className="card">
+                {/* En-tête */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: '700' }}>
-                        📅 Planning partagé
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: '700', textTransform: 'capitalize' }}>
+                        📅 Planning - {monthName}
                     </h2>
                     
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                         <button 
-                            className={`btn ${viewMode === 'jour' ? 'btn-primary' : 'btn-secondary'}`}
-                            onClick={() => setViewMode('jour')}
+                            className="btn btn-secondary"
+                            onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1))}
                         >
-                            Jour
+                            ◀
                         </button>
                         <button 
-                            className={`btn ${viewMode === 'semaine' ? 'btn-primary' : 'btn-secondary'}`}
-                            onClick={() => setViewMode('semaine')}
+                            className="btn btn-secondary"
+                            onClick={() => setSelectedDate(new Date())}
                         >
-                            Semaine
+                            Aujourd'hui
                         </button>
                         <button 
-                            className={`btn ${viewMode === 'mois' ? 'btn-primary' : 'btn-secondary'}`}
-                            onClick={() => setViewMode('mois')}
+                            className="btn btn-secondary"
+                            onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1))}
                         >
-                            Mois
+                            ▶
                         </button>
                     </div>
                 </div>
 
+                {/* Légende des statuts */}
                 <div style={{ 
-                    textAlign: 'center', 
-                    padding: '4rem 2rem',
-                    color: '#6b7280'
+                    display: 'flex', 
+                    gap: '1rem', 
+                    marginBottom: '1.5rem',
+                    flexWrap: 'wrap',
+                    padding: '1rem',
+                    background: '#f9fafb',
+                    borderRadius: '0.5rem'
                 }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🚧</div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem' }}>
-                        Calendrier en construction
-                    </div>
-                    <div style={{ fontSize: '0.875rem' }}>
-                        Cette fonctionnalité arrive bientôt !
-                    </div>
+                    {statutsOptions.map(statut => (
+                        <div key={statut.value} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{
+                                width: '16px',
+                                height: '16px',
+                                borderRadius: '4px',
+                                background: statut.color
+                            }}></div>
+                            <span style={{ fontSize: '0.875rem', color: '#374151' }}>{statut.label}</span>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Calendrier */}
+                <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                            <tr>
+                                <th style={{ 
+                                    padding: '0.75rem', 
+                                    borderBottom: '2px solid #e5e7eb',
+                                    textAlign: 'left',
+                                    fontWeight: '600',
+                                    position: 'sticky',
+                                    left: 0,
+                                    background: 'white',
+                                    zIndex: 10
+                                }}>
+                                    Commercial
+                                </th>
+                                {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(day => (
+                                    <th key={day} style={{ 
+                                        padding: '0.75rem', 
+                                        borderBottom: '2px solid #e5e7eb',
+                                        textAlign: 'center',
+                                        fontSize: '0.875rem',
+                                        fontWeight: '600',
+                                        color: '#6b7280'
+                                    }}>
+                                        {day}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {commerciaux.map(commercial => (
+                                <tr key={commercial.email}>
+                                    <td style={{ 
+                                        padding: '0.75rem',
+                                        borderBottom: '1px solid #e5e7eb',
+                                        fontWeight: '500',
+                                        position: 'sticky',
+                                        left: 0,
+                                        background: 'white',
+                                        zIndex: 5
+                                    }}>
+                                        {commercial.name}
+                                    </td>
+                                    {days.map((date, idx) => {
+                                        if (!date) {
+                                            return <td key={idx} style={{ borderBottom: '1px solid #e5e7eb' }}></td>;
+                                        }
+
+                                        const dateStr = formatDate(date);
+                                        const planning = plannings[commercial.email]?.[dateStr];
+                                        const statutInfo = planning ? getStatutInfo(planning.statut) : null;
+                                        const isToday = formatDate(new Date()) === dateStr;
+                                        const isCurrentUser = commercial.email === currentUser.email;
+
+                                        return (
+                                            <td 
+                                                key={idx}
+                                                style={{ 
+                                                    padding: '0.5rem',
+                                                    borderBottom: '1px solid #e5e7eb',
+                                                    borderLeft: '1px solid #f3f4f6',
+                                                    textAlign: 'center',
+                                                    cursor: isCurrentUser ? 'pointer' : 'default',
+                                                    background: statutInfo ? `${statutInfo.color}15` : (isToday ? '#fef3c7' : 'white'),
+                                                    transition: 'all 0.2s'
+                                                }}
+                                                onClick={() => isCurrentUser && handleOpenModal(date)}
+                                                onMouseEnter={(e) => isCurrentUser && (e.target.style.background = '#f9fafb')}
+                                                onMouseLeave={(e) => isCurrentUser && (e.target.style.background = statutInfo ? `${statutInfo.color}15` : (isToday ? '#fef3c7' : 'white'))}
+                                            >
+                                                <div style={{ fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.25rem' }}>
+                                                    {date.getDate()}
+                                                </div>
+                                                {statutInfo && (
+                                                    <div style={{
+                                                        fontSize: '0.7rem',
+                                                        padding: '0.25rem',
+                                                        borderRadius: '4px',
+                                                        background: statutInfo.color,
+                                                        color: 'white',
+                                                        fontWeight: '500'
+                                                    }}>
+                                                        {statutInfo.label.substring(0, 4)}
+                                                    </div>
+                                                )}
+                                            </td>
+                                        );
+                                    })}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </div>
+
+            {/* Modal d'édition */}
+            {showModal && (
+                <div className="modal-overlay" onClick={() => setShowModal(false)}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div className="modal-title">
+                                Modifier le statut - {editingDate?.toLocaleDateString('fr-FR')}
+                            </div>
+                        </div>
+                        
+                        <div className="modal-body">
+                            <div className="form-group">
+                                <label className="form-label">Statut</label>
+                                <select
+                                    className="form-select"
+                                    value={formData.statut}
+                                    onChange={(e) => setFormData({ ...formData, statut: e.target.value })}
+                                >
+                                    {statutsOptions.map(s => (
+                                        <option key={s.value} value={s.value}>{s.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {getStatutInfo(formData.statut).needsLieu && (
+                                <div className="form-group">
+                                    <label className="form-label">Lieu / Destination</label>
+                                    <input
+                                        type="text"
+                                        className="form-input"
+                                        value={formData.lieu}
+                                        onChange={(e) => setFormData({ ...formData, lieu: e.target.value })}
+                                        placeholder="Ex: Lesquin, Paris..."
+                                    />
+                                </div>
+                            )}
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div className="form-group">
+                                    <label className="form-label">Heure début</label>
+                                    <input
+                                        type="time"
+                                        className="form-input"
+                                        value={formData.heureDebut}
+                                        onChange={(e) => setFormData({ ...formData, heureDebut: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Heure fin</label>
+                                    <input
+                                        type="time"
+                                        className="form-input"
+                                        value={formData.heureFin}
+                                        onChange={(e) => setFormData({ ...formData, heureFin: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Commentaire (optionnel)</label>
+                                <textarea
+                                    className="form-input"
+                                    value={formData.commentaire}
+                                    onChange={(e) => setFormData({ ...formData, commentaire: e.target.value })}
+                                    placeholder="Précisions..."
+                                    style={{ minHeight: '80px' }}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="modal-footer">
+                            <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                                Annuler
+                            </button>
+                            <button className="btn btn-primary" onClick={handleSave}>
+                                Enregistrer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
