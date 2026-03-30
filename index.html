@@ -829,7 +829,7 @@ function CalendrierPlanning({ currentUser }) {
                     ))}
                 </div>
 
-                {/* Calendrier */}
+              {/* Calendrier */}
                 <div style={{ overflowX: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
@@ -839,6 +839,7 @@ function CalendrierPlanning({ currentUser }) {
                                     borderBottom: '2px solid #e5e7eb',
                                     textAlign: 'left',
                                     fontWeight: '600',
+                                    minWidth: '120px',
                                     position: 'sticky',
                                     left: 0,
                                     background: 'white',
@@ -846,18 +847,30 @@ function CalendrierPlanning({ currentUser }) {
                                 }}>
                                     Commercial
                                 </th>
-                                {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(day => (
-                                    <th key={day} style={{ 
-                                        padding: '0.75rem', 
-                                        borderBottom: '2px solid #e5e7eb',
-                                        textAlign: 'center',
-                                        fontSize: '0.875rem',
-                                        fontWeight: '600',
-                                        color: '#6b7280'
-                                    }}>
-                                        {day}
-                                    </th>
-                                ))}
+                                {days.map((date, idx) => {
+                                    if (!date) return <th key={idx}></th>;
+                                    
+                                    const dayName = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'][date.getDay()];
+                                    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                                    
+                                    return (
+                                        <th key={idx} style={{ 
+                                            padding: '0.5rem', 
+                                            borderBottom: '2px solid #e5e7eb',
+                                            textAlign: 'center',
+                                            fontSize: '0.75rem',
+                                            fontWeight: '600',
+                                            color: isWeekend ? '#9ca3af' : '#374151',
+                                            background: isWeekend ? '#f3f4f6' : 'white',
+                                            minWidth: '60px'
+                                        }}>
+                                            <div>{dayName}</div>
+                                            <div style={{ fontSize: '0.875rem', fontWeight: '700', marginTop: '0.25rem' }}>
+                                                {date.getDate()}
+                                            </div>
+                                        </th>
+                                    );
+                                })}
                             </tr>
                         </thead>
                         <tbody>
@@ -884,6 +897,7 @@ function CalendrierPlanning({ currentUser }) {
                                         const statutInfo = planning ? getStatutInfo(planning.statut) : null;
                                         const isToday = formatDate(new Date()) === dateStr;
                                         const isCurrentUser = commercial.email === currentUser.email;
+                                        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
 
                                         return (
                                             <td 
@@ -893,27 +907,31 @@ function CalendrierPlanning({ currentUser }) {
                                                     borderBottom: '1px solid #e5e7eb',
                                                     borderLeft: '1px solid #f3f4f6',
                                                     textAlign: 'center',
-                                                    cursor: isCurrentUser ? 'pointer' : 'default',
-                                                    background: statutInfo ? `${statutInfo.color}15` : (isToday ? '#fef3c7' : 'white'),
-                                                    transition: 'all 0.2s'
+                                                    cursor: isCurrentUser && !isWeekend ? 'pointer' : 'default',
+                                                    background: isWeekend ? '#f9fafb' : (statutInfo ? `${statutInfo.color}15` : (isToday ? '#fef3c7' : 'white')),
+                                                    transition: 'all 0.2s',
+                                                    verticalAlign: 'middle',
+                                                    height: '60px'
                                                 }}
-                                                onClick={() => isCurrentUser && handleOpenModal(date)}
-                                                onMouseEnter={(e) => isCurrentUser && (e.target.style.background = '#f9fafb')}
-                                                onMouseLeave={(e) => isCurrentUser && (e.target.style.background = statutInfo ? `${statutInfo.color}15` : (isToday ? '#fef3c7' : 'white'))}
+                                                onClick={() => isCurrentUser && !isWeekend && handleOpenModal(date)}
+                                                onMouseEnter={(e) => isCurrentUser && !isWeekend && (e.target.style.background = '#f9fafb')}
+                                                onMouseLeave={(e) => isCurrentUser && !isWeekend && (e.target.style.background = isWeekend ? '#f9fafb' : (statutInfo ? `${statutInfo.color}15` : (isToday ? '#fef3c7' : 'white')))}
                                             >
-                                                <div style={{ fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.25rem' }}>
-                                                    {date.getDate()}
-                                                </div>
                                                 {statutInfo && (
                                                     <div style={{
                                                         fontSize: '0.7rem',
-                                                        padding: '0.25rem',
+                                                        padding: '0.35rem 0.25rem',
                                                         borderRadius: '4px',
                                                         background: statutInfo.color,
                                                         color: 'white',
-                                                        fontWeight: '500'
+                                                        fontWeight: '600'
                                                     }}>
-                                                        {statutInfo.label.substring(0, 4)}
+                                                        {statutInfo.label}
+                                                        {planning.lieu && (
+                                                            <div style={{ fontSize: '0.65rem', marginTop: '0.15rem', opacity: 0.9 }}>
+                                                                {planning.lieu}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 )}
                                             </td>
@@ -924,8 +942,7 @@ function CalendrierPlanning({ currentUser }) {
                         </tbody>
                     </table>
                 </div>
-            </div>
-
+                
             {/* Modal d'édition */}
             {showModal && (
                 <div className="modal-overlay" onClick={() => setShowModal(false)}>
