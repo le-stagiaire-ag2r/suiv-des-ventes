@@ -136,6 +136,11 @@
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
+      
+        @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
         
         .notification {
             position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem;
@@ -306,102 +311,178 @@ function CommentModal({ vente, onClose }) {
         // ========== PAGE DE CONNEXION ==========
         
         function LoginPage({ onLogin }) {
-            const [email, setEmail] = useState('');
-            const [password, setPassword] = useState('');
-            const [loading, setLoading] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
 
-            const handleSubmit = async (e) => {
-                e.preventDefault();
-                setLoading(true);
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
 
-                try {
-                    await auth.signInWithEmailAndPassword(email, password);
-                    // onAuthStateChanged gérera la connexion
-                } catch (error) {
-                    alert('Email ou mot de passe incorrect');
-                }
+        try {
+            await auth.signInWithEmailAndPassword(email, password);
+        } catch (error) {
+            alert('Email ou mot de passe incorrect');
+        }
 
-                setLoading(false);
-            };
+        setLoading(false);
+    };
 
-            return (
-                <div className="login-container">
-                    <div className="login-card">
-                        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-                            <div style={{ 
-                                width: '80px', height: '80px', 
-                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                borderRadius: '50%', margin: '0 auto 1.5rem',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: '2.5rem'
-                            }}>
-                                📊
-                            </div>
-                            <h1 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>
-                                Suivi des Ventes
-                            </h1>
-                            <p style={{ color: '#6b7280', fontSize: '0.95rem' }}>
-                                Connectez-vous à votre espace
-                            </p>
-                        </div>
+    return (
+        <div className="login-container">
+            <div className="login-card">
+                <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                    <div style={{ 
+                        width: '80px', 
+                        height: '80px', 
+                        background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+                        borderRadius: '20px',
+                        margin: '0 auto 2rem',
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        boxShadow: '0 10px 40px rgba(59, 130, 246, 0.3)',
+                        animation: 'float 3s ease-in-out infinite'
+                    }}>
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                            <path d="M3 3v18h18" />
+                            <path d="M18 17V9" />
+                            <path d="M13 17V5" />
+                            <path d="M8 17v-3" />
+                        </svg>
+                    </div>
+                    <h1 style={{ 
+                        fontSize: '2.25rem', 
+                        fontWeight: '700', 
+                        color: '#0f172a', 
+                        marginBottom: '0.75rem',
+                        letterSpacing: '-0.02em'
+                    }}>
+                        Suivi des Ventes
+                    </h1>
+                    <p style={{ color: '#64748b', fontSize: '1.05rem', fontWeight: '500' }}>
+                        Accédez à votre espace professionnel
+                    </p>
+                </div>
 
-                        <form onSubmit={handleSubmit}>
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
-                                    📧 Email
-                                </label>
-                                <input
-                                    type="email"
-                                    className="form-input"
-                                    style={{ width: '100%' }}
-                                    placeholder="votre.email@company.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                />
-                            </div>
-
-                            <div style={{ marginBottom: '2rem' }}>
-                                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
-                                    🔒 Mot de passe
-                                </label>
-                                <input
-                                    type="password"
-                                    className="form-input"
-                                    style={{ width: '100%' }}
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                />
-                            </div>
-
-                            <button
-                                type="submit"
-                                className="btn btn-primary"
-                                style={{ width: '100%', padding: '1rem', fontSize: '1rem' }}
-                                disabled={loading}
-                            >
-                                {loading ? '🔄 Connexion...' : '🚀 Se connecter'}
-                            </button>
-                        </form>
-
-                        <div style={{ 
-                            marginTop: '2rem', padding: '1.25rem',
-                            background: 'linear-gradient(135deg, #f0f4ff 0%, #f5f3ff 100%)',
-                            borderRadius: '1rem', border: '1px solid #e0e7ff'
+                <form onSubmit={handleSubmit}>
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <label style={{ 
+                            display: 'block', 
+                            fontSize: '0.875rem', 
+                            fontWeight: '600', 
+                            color: '#334155', 
+                            marginBottom: '0.5rem' 
                         }}>
-                            <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#4c51bf', marginBottom: '0.75rem' }}>
-                                💡 Accès commercial
-                            </div>
-                            <div style={{ fontSize: '0.8rem', color: '#6b7280', lineHeight: '1.5' }}>
-                                Utilisez vos identifiants professionnels
-                            </div>
-                        </div>
+                            Adresse email
+                        </label>
+                        <input
+                            type="email"
+                            className="form-input"
+                            style={{ 
+                                width: '100%',
+                                padding: '0.875rem 1rem',
+                                fontSize: '1rem',
+                                border: '2px solid #e2e8f0',
+                                borderRadius: '12px',
+                                transition: 'all 0.2s'
+                            }}
+                            placeholder="nom@entreprise.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            onFocus={(e) => {
+                                e.target.style.borderColor = '#3b82f6';
+                                e.target.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.1)';
+                            }}
+                            onBlur={(e) => {
+                                e.target.style.borderColor = '#e2e8f0';
+                                e.target.style.boxShadow = 'none';
+                            }}
+                            required
+                        />
+                    </div>
+
+                    <div style={{ marginBottom: '2rem' }}>
+                        <label style={{ 
+                            display: 'block', 
+                            fontSize: '0.875rem', 
+                            fontWeight: '600', 
+                            color: '#334155', 
+                            marginBottom: '0.5rem' 
+                        }}>
+                            Mot de passe
+                        </label>
+                        <input
+                            type="password"
+                            className="form-input"
+                            style={{ 
+                                width: '100%',
+                                padding: '0.875rem 1rem',
+                                fontSize: '1rem',
+                                border: '2px solid #e2e8f0',
+                                borderRadius: '12px',
+                                transition: 'all 0.2s'
+                            }}
+                            placeholder="••••••••"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            onFocus={(e) => {
+                                e.target.style.borderColor = '#3b82f6';
+                                e.target.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.1)';
+                            }}
+                            onBlur={(e) => {
+                                e.target.style.borderColor = '#e2e8f0';
+                                e.target.style.boxShadow = 'none';
+                            }}
+                            required
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        style={{ 
+                            width: '100%', 
+                            padding: '1rem', 
+                            fontSize: '1rem',
+                            borderRadius: '12px',
+                            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                            border: 'none',
+                            color: 'white',
+                            fontWeight: '600',
+                            boxShadow: '0 4px 14px rgba(59, 130, 246, 0.4)',
+                            transition: 'all 0.2s',
+                            cursor: 'pointer'
+                        }}
+                        disabled={loading}
+                        onMouseEnter={(e) => {
+                            e.target.style.transform = 'translateY(-2px)';
+                            e.target.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.5)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = '0 4px 14px rgba(59, 130, 246, 0.4)';
+                        }}
+                    >
+                        {loading ? 'Connexion en cours...' : 'Se connecter'}
+                    </button>
+                </form>
+
+                <div style={{ 
+                    marginTop: '2rem', 
+                    padding: '1rem',
+                    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                    borderRadius: '12px',
+                    border: '1px solid #e2e8f0',
+                    textAlign: 'center'
+                }}>
+                    <div style={{ fontSize: '0.875rem', color: '#64748b', fontWeight: '500' }}>
+                        Connexion sécurisée SSL
                     </div>
                 </div>
-            );
-        }
+            </div>
+        </div>
+    );
+}
 
         // ========== HEADER ==========
         
