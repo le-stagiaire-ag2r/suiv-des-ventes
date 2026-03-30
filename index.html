@@ -789,6 +789,41 @@ function CalendrierPlanning({ currentUser }) {
         alert('Erreur lors de la sauvegarde');
     }
 };
+    };
+
+const handleDeleteEvent = async (eventId) => {
+    if (!editingDate) return;
+    
+    if (!window.confirm('Supprimer cet événement ?')) return;
+
+    const dateStr = formatDate(editingDate);
+    
+    try {
+        const docRef = db.collection('calendrier').doc(currentUser.email);
+        const doc = await docRef.get();
+        const existingData = doc.exists ? doc.data() : {};
+        const existingEvents = existingData[dateStr] || [];
+        
+        // Filtrer pour supprimer l'événement
+        const updatedEvents = existingEvents.filter(evt => evt.id !== eventId);
+        
+        if (updatedEvents.length > 0) {
+            await docRef.set({
+                [dateStr]: updatedEvents
+            }, { merge: true });
+        } else {
+            // Si plus d'événements, supprimer la date complètement
+            const { [dateStr]: removed, ...remaining } = existingData;
+            await docRef.set(remaining);
+        }
+        
+        // Mettre à jour l'affichage
+        setDayEvents(updatedEvents);
+    } catch (error) {
+        console.error('Erreur suppression:', error);
+        alert('Erreur lors de la suppression');
+    }
+};
 
     const getStatutInfo = (statut) => {
         return statutsOptions.find(s => s.value === statut) || statutsOptions[0];
@@ -939,8 +974,17 @@ return (
                                                     height: '60px'
                                                 }}
                                                 onClick={() => isCurrentUser && !isWeekend && handleOpenModal(date)}
-                                                onMouseEnter={(e) => isCurrentUser && !isWeekend && (e.target.style.background = '#f9fafb')}
-                                                onMouseLeave={(e) => isCurrentUser && !isWeekend && (e.target.style.background = isWeekend ? '#f9fafb' : (statutInfo ? `${statutInfo.color}15` : (isToday ? '#fef3c7' : 'white')))}
+onMouseEnter={(e) => {
+    if (isCurrentUser && !isWeekend) {
+        e.currentTarget.style.background = '#e5e7eb';
+    }
+}}
+onMouseLeave={(e) => {
+    if (isCurrentUser && !isWeekend) {
+        const bg = isWeekend ? '#f9fafb' : (statutInfo ? `${statutInfo.color}15` : (isToday ? '#fef3c7' : 'white'));
+        e.currentTarget.style.background = bg;
+    }
+}}
                                             >
                                                 {statutInfo && (
     <div style={{
@@ -1005,14 +1049,30 @@ return (
                             marginBottom: '0.5rem',
                             borderLeft: `3px solid ${statutInfo.color}`
                         }}>
-                            <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#1f2937' }}>
-                                    {evt.heureDebut} - {evt.heureFin}
-                                </div>
-                                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                                    {statutInfo.label} {evt.lieu && `(${evt.lieu})`}
-                                </div>
-                            </div>
+                           <div style={{ flex: 1 }}>
+    <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#1f2937' }}>
+        {evt.heureDebut} - {evt.heureFin}
+        {evt.commentaire && (
+            <span style={{ fontSize: '0.7rem', color: '#9ca3af', fontWeight: 'normal', marginLeft: '0.5rem' }}>
+                ({evt.commentaire})
+            </span>
+        )}
+    </div>
+    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+        {statutInfo.label} {evt.lieu && `(${evt.lieu})`}
+    </div>
+</div>
+<button
+    className="btn btn-danger"
+    style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+    onClick={(e) => {
+        e.stopPropagation();
+        handleDeleteEvent(evt.id);
+    }}
+    title="Supprimer"
+>
+    🗑️
+</button>
                         </div>
                     );
                 })}
