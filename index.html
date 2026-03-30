@@ -655,6 +655,8 @@ function CalendrierPlanning({ currentUser }) {
         heureFin: '18:00',
         commentaire: ''
     });
+    
+    const [dayEvents, setDayEvents] = useState([]);
 
     const statutsOptions = [
         { value: 'disponible', label: 'Disponible', color: '#10b981' },
@@ -728,45 +730,65 @@ function CalendrierPlanning({ currentUser }) {
     };
 
     const handleOpenModal = (date) => {
-        setEditingDate(date);
-        const dateStr = formatDate(date);
-        const existing = plannings[currentUser.email]?.[dateStr];
-        
-        if (existing) {
-            setFormData(existing);
-        } else {
-            setFormData({
-                statut: 'disponible',
-                lieu: '',
-                heureDebut: '09:00',
-                heureFin: '18:00',
-                commentaire: ''
-            });
-        }
-        
-        setShowModal(true);
-    };
+    setEditingDate(date);
+    
+    // Charger les événements existants du jour
+    const dateStr = formatDate(date);
+    const existing = plannings[currentUser.email]?.[dateStr];
+    const events = Array.isArray(existing) ? existing : (existing ? [existing] : []);
+    setDayEvents(events);
+    
+    // Toujours ouvrir avec un formulaire vide pour ajouter un nouvel événement
+    setFormData({
+        statut: 'disponible',
+        lieu: '',
+        heureDebut: '09:00',
+        heureFin: '18:00',
+        commentaire: ''
+    });
+    setShowModal(true);
+};
 
     const handleSave = async () => {
-        if (!editingDate) return;
+    if (!editingDate) return;
 
-        const dateStr = formatDate(editingDate);
+    const dateStr = formatDate(editingDate);
+    
+    try {
+        // Récupérer les événements existants du jour
+        const docRef = db.collection('calendrier').doc(currentUser.email);
+        const doc = await docRef.get();
+        const existingData = doc.exists ? doc.data() : {};
+        const existingEvents = existingData[dateStr] || [];
         
-        try {
-            await db.collection('calendrier').doc(currentUser.email).set({
-                [dateStr]: {
-                    ...formData,
-                    dateModification: new Date().toISOString()
-                }
-            }, { merge: true });
+        // Créer le nouvel événement
+        const newEvent = {
+            id: Date.now().toString(),
+            ...formData,
+            dateCreation: new Date().toISOString()
+        };
+        
+        // Ajouter à la liste
+        const updatedEvents = Array.isArray(existingEvents) ? [...existingEvents, newEvent] : [newEvent];
+        
+        await docRef.set({
+            [dateStr]: updatedEvents
+        }, { merge: true });
 
-            setShowModal(false);
-            setEditingDate(null);
-        } catch (error) {
-            console.error('Erreur sauvegarde:', error);
-            alert('Erreur lors de la sauvegarde');
-        }
-    };
+        setShowModal(false);
+        setEditingDate(null);
+        setFormData({
+            statut: 'disponible',
+            lieu: '',
+            heureDebut: '09:00',
+            heureFin: '18:00',
+            commentaire: ''
+        });
+    } catch (error) {
+        console.error('Erreur sauvegarde:', error);
+        alert('Erreur lors de la sauvegarde');
+    }
+};
 
     const getStatutInfo = (statut) => {
         return statutsOptions.find(s => s.value === statut) || statutsOptions[0];
@@ -893,13 +915,16 @@ function CalendrierPlanning({ currentUser }) {
                                         }
 
                                         const dateStr = formatDate(date);
-                                        const planning = plannings[commercial.email]?.[dateStr];
-                                        const statutInfo = planning ? getStatutInfo(planning.statut) : null;
-                                        const isToday = formatDate(new Date()) === dateStr;
-                                        const isCurrentUser = commercial.email === currentUser.email;
-                                        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+const planning = plannings[commercial.email]?.[dateStr];
+// Si c'est un tableau, prendre le premier événement pour l'aperçu
+const firstEvent = Array.isArray(planning) ? planning[0] : planning;
+const statutInfo = firstEvent ? getStatutInfo(firstEvent.statut) : null;
+const hasMultipleEvents = Array.isArray(planning) && planning.length > 1;
+const isToday = formatDate(new Date()) === dateStr;
+const isCurrentUser = commercial.email === currentUser.email;
+const isWeekend = date.getDay() === 0 || date.getDay() === 6;
 
-                                        return (
+return (
                                             <td 
                                                 key={idx}
                                                 style={{ 
@@ -918,22 +943,27 @@ function CalendrierPlanning({ currentUser }) {
                                                 onMouseLeave={(e) => isCurrentUser && !isWeekend && (e.target.style.background = isWeekend ? '#f9fafb' : (statutInfo ? `${statutInfo.color}15` : (isToday ? '#fef3c7' : 'white')))}
                                             >
                                                 {statutInfo && (
-                                                    <div style={{
-                                                        fontSize: '0.7rem',
-                                                        padding: '0.35rem 0.25rem',
-                                                        borderRadius: '4px',
-                                                        background: statutInfo.color,
-                                                        color: 'white',
-                                                        fontWeight: '600'
-                                                    }}>
-                                                        {statutInfo.label}
-                                                        {planning.lieu && (
-                                                            <div style={{ fontSize: '0.65rem', marginTop: '0.15rem', opacity: 0.9 }}>
-                                                                {planning.lieu}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
+    <div style={{
+        fontSize: '0.7rem',
+        padding: '0.35rem 0.25rem',
+        borderRadius: '4px',
+        background: statutInfo.color,
+        color: 'white',
+        fontWeight: '600'
+    }}>
+        {statutInfo.label}
+        {firstEvent.lieu && (
+            <div style={{ fontSize: '0.65rem', marginTop: '0.15rem', opacity: 0.9 }}>
+                {firstEvent.lieu}
+            </div>
+        )}
+        {hasMultipleEvents && (
+            <div style={{ fontSize: '0.65rem', marginTop: '0.15rem', opacity: 0.9 }}>
+                +{planning.length - 1} autre{planning.length > 2 ? 's' : ''}
+            </div>
+        )}
+    </div>
+)}
                                             </td>
                                         );
                                     })}
@@ -954,8 +984,47 @@ function CalendrierPlanning({ currentUser }) {
                         </div>
                         
                         <div className="modal-body">
-                            <div className="form-group">
-                                <label className="form-label">Statut</label>
+    {/* Liste des événements existants */}
+    {dayEvents.length > 0 && (
+        <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f9fafb', borderRadius: '0.5rem' }}>
+            <div style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem', color: '#374151' }}>
+                Événements du jour :
+            </div>
+            {dayEvents
+                .sort((a, b) => a.heureDebut.localeCompare(b.heureDebut))
+                .map((evt, idx) => {
+                    const statutInfo = getStatutInfo(evt.statut);
+                    return (
+                        <div key={idx} style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '0.5rem',
+                            padding: '0.5rem',
+                            background: 'white',
+                            borderRadius: '0.25rem',
+                            marginBottom: '0.5rem',
+                            borderLeft: `3px solid ${statutInfo.color}`
+                        }}>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#1f2937' }}>
+                                    {evt.heureDebut} - {evt.heureFin}
+                                </div>
+                                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                                    {statutInfo.label} {evt.lieu && `(${evt.lieu})`}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
+        </div>
+    )}
+
+    <div style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '1rem', color: '#374151' }}>
+        Ajouter un événement :
+    </div>
+
+    <div className="form-group">
+        <label className="form-label">Statut</label>
                                 <select
                                     className="form-select"
                                     value={formData.statut}
