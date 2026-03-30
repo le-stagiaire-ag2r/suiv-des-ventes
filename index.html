@@ -595,30 +595,43 @@ function CommentModal({ vente, onClose }) {
     </>
 )}
 
-                                    {currentUser.type === 'admin' && (
-                                        <>
-                                            <button 
-                                                className={`btn ${currentView === 'liste' ? 'btn-primary' : 'btn-secondary'}`}
-                                                onClick={() => setCurrentView('liste')}
-                                            >
-                                                👁️ Toutes les ventes ({ventesCount})
-                                            </button>
-                                            <button 
-                                                className={`btn ${currentView === 'gestion' ? 'btn-primary' : 'btn-secondary'}`}
-                                                onClick={() => setCurrentView('gestion')}
-                                            >
-                                                ⚙️ Gestion
-                                            </button>
-                                        </>
-                                    )}
+<button 
+    className={`btn ${currentView === 'calendrier' ? 'btn-primary' : 'btn-secondary'}`}
+    onClick={() => setCurrentView('calendrier')}
+>
+    📅 Planning
+</button>
 
-                                    <button className="btn btn-success" onClick={onExport}>
-                                        💾 Export CSV
-                                    </button>
+{currentUser.type === 'admin' && (
+    <>
+        <button 
+            className={`btn ${currentView === 'liste' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setCurrentView('liste')}
+        >
+            👁️ Toutes les ventes ({ventesCount})
+        </button>
+        <button 
+            className={`btn ${currentView === 'calendrier' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setCurrentView('calendrier')}
+        >
+            📅 Planning équipe
+        </button>
+        <button 
+            className={`btn ${currentView === 'gestion' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setCurrentView('gestion')}
+        >
+            ⚙️ Gestion
+        </button>
+    </>
+)}
 
-                                    <button className="btn btn-danger" onClick={onLogout}>
-                                        🚪 Déconnexion
-                                    </button>
+<button className="btn btn-success" onClick={onExport}>
+    💾 Export CSV
+</button>
+
+<button className="btn btn-danger" onClick={onLogout}>
+    🚪 Déconnexion
+</button>
                                 </div>
                             </div>
                         </div>
@@ -626,7 +639,135 @@ function CommentModal({ vente, onClose }) {
                 </div>
             );
         }
+        // ========== CALENDRIER PLANNING ==========
 
+function CalendrierPlanning({ currentUser }) {
+    const [plannings, setPlannings] = useState({});
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [viewMode, setViewMode] = useState('mois'); // 'jour', 'semaine', 'mois'
+    const [showModal, setShowModal] = useState(false);
+    const [editingSlot, setEditingSlot] = useState(null);
+
+    const [formData, setFormData] = useState({
+        statut: 'disponible',
+        lieu: '',
+        heureDebut: '09:00',
+        heureFin: '18:00',
+        commentaire: ''
+    });
+
+    const statutsOptions = [
+        { value: 'disponible', label: 'Disponible', color: '#10b981', icon: '✓' },
+        { value: 'permanence', label: 'En permanence', color: '#3b82f6', icon: '📍', needsLieu: true },
+        { value: 'teletravail', label: 'Télétravail', color: '#8b5cf6', icon: '🏠' },
+        { value: 'conges', label: 'Congés', color: '#f59e0b', icon: '🏖️' },
+        { value: 'maladie', label: 'Arrêt maladie', color: '#ef4444', icon: '🤒' },
+        { value: 'formation', label: 'Formation', color: '#06b6d4', icon: '📚' },
+        { value: 'deplacement', label: 'Déplacement', color: '#ec4899', icon: '🚗', needsLieu: true },
+        { value: 'indisponible', label: 'Indisponible', color: '#6b7280', icon: '❌' }
+    ];
+
+    // Charger les plannings de tous les commerciaux
+    useEffect(() => {
+        if (!currentUser) return;
+
+        const unsubscribes = [];
+        const allCommerciaux = Object.keys(currentUser.allUsers || {})
+            .filter(email => currentUser.allUsers[email].type === 'commercial');
+
+        allCommerciaux.forEach(email => {
+            const unsubscribe = db.collection('calendrier').doc(email)
+                .collection('dates')
+                .onSnapshot(snapshot => {
+                    const dates = {};
+                    snapshot.forEach(doc => {
+                        dates[doc.id] = doc.data();
+                    });
+                    setPlannings(prev => ({ ...prev, [email]: dates }));
+                });
+            unsubscribes.push(unsubscribe);
+        });
+
+        return () => unsubscribes.forEach(unsub => unsub());
+    }, [currentUser]);
+
+    const handleSaveSlot = async () => {
+        if (!editingSlot) return;
+
+        const dateStr = editingSlot.toISOString().split('T')[0];
+        
+        try {
+            await db.collection('calendrier')
+                .doc(currentUser.email)
+                .collection('dates')
+                .doc(dateStr)
+                .set({
+                    ...formData,
+                    dateCreation: new Date().toISOString()
+                });
+
+            setShowModal(false);
+            setEditingSlot(null);
+            setFormData({
+                statut: 'disponible',
+                lieu: '',
+                heureDebut: '09:00',
+                heureFin: '18:00',
+                commentaire: ''
+            });
+        } catch (error) {
+            console.error('Erreur sauvegarde:', error);
+            alert('Erreur lors de la sauvegarde');
+        }
+    };
+
+    return (
+        <div className="container" style={{ paddingTop: '1.5rem' }}>
+            <div className="card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: '700' }}>
+                        📅 Planning partagé
+                    </h2>
+                    
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button 
+                            className={`btn ${viewMode === 'jour' ? 'btn-primary' : 'btn-secondary'}`}
+                            onClick={() => setViewMode('jour')}
+                        >
+                            Jour
+                        </button>
+                        <button 
+                            className={`btn ${viewMode === 'semaine' ? 'btn-primary' : 'btn-secondary'}`}
+                            onClick={() => setViewMode('semaine')}
+                        >
+                            Semaine
+                        </button>
+                        <button 
+                            className={`btn ${viewMode === 'mois' ? 'btn-primary' : 'btn-secondary'}`}
+                            onClick={() => setViewMode('mois')}
+                        >
+                            Mois
+                        </button>
+                    </div>
+                </div>
+
+                <div style={{ 
+                    textAlign: 'center', 
+                    padding: '4rem 2rem',
+                    color: '#6b7280'
+                }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🚧</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                        Calendrier en construction
+                    </div>
+                    <div style={{ fontSize: '0.875rem' }}>
+                        Cette fonctionnalité arrive bientôt !
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
         // ========== COMPOSANTS CHALLENGE ==========
 
 function ChallengeCard({ currentUser, ventes, objectifs, filters }) {
@@ -3148,6 +3289,9 @@ const handleSubmitPermanence = async (permData) => {
         onUpdateConfig={handleUpdateConfig}
         showNotification={showNotification}
     />
+)}
+                    {currentView === 'calendrier' && (
+    <CalendrierPlanning currentUser={currentUser} />
 )}
 
                     {notification && (
