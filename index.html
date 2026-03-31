@@ -816,10 +816,12 @@ const docRef = db.collection('calendrier').doc(targetEmail);
             datesToCreate.forEach((date, idx) => {
                 const dateStr = formatDate(date);
                 const existingEvents = existingData[dateStr] || [];
-                const eventWithUniqueId = {
-                    ...newEvent,
-                    id: `${Date.now()}_${idx}`
-                };
+                const seriesId = `series_${Date.now()}`;
+const eventWithUniqueId = {
+    ...newEvent,
+    id: `${Date.now()}_${idx}`,
+    seriesId: seriesId  // Marquer tous les événements de la même série
+};
                 const updatedEvents = Array.isArray(existingEvents) ? [...existingEvents, eventWithUniqueId] : [eventWithUniqueId];
                 updates[dateStr] = updatedEvents;
             });
@@ -874,7 +876,6 @@ const docRef = db.collection('calendrier').doc(targetEmail);
             const { [dateStr]: removed, ...remaining } = existingData;
             await docRef.set(remaining);
         }
-        
         // Mettre à jour l'affichage
         setDayEvents(updatedEvents);
     } catch (error) {
@@ -882,7 +883,46 @@ const docRef = db.collection('calendrier').doc(targetEmail);
         alert('Erreur lors de la suppression');
     }
 };
+const handleDeleteSeries = async (seriesId) => {
+    if (!window.confirm('⚠️ Supprimer TOUTE la série d\'événements récurrents ? Cette action est irréversible !')) return;
 
+    try {
+        const targetEmail = formData.targetEmail || currentUser.email;
+        const docRef = db.collection('calendrier').doc(targetEmail);
+        const doc = await docRef.get();
+        const existingData = doc.exists ? doc.data() : {};
+        
+        let deletedCount = 0;
+        const updates = {};
+        
+        // Parcourir toutes les dates et supprimer les événements de la série
+        Object.keys(existingData).forEach(dateStr => {
+            const events = existingData[dateStr];
+            if (Array.isArray(events)) {
+                const filteredEvents = events.filter(evt => evt.seriesId !== seriesId);
+                
+                if (filteredEvents.length !== events.length) {
+                    deletedCount += events.length - filteredEvents.length;
+                }
+                
+                if (filteredEvents.length > 0) {
+                    updates[dateStr] = filteredEvents;
+                }
+            }
+        });
+        
+        // Sauvegarder les modifications
+        await docRef.set(updates);
+        
+        // Fermer la modal et afficher le résultat
+        setShowModal(false);
+        alert(`✅ ${deletedCount} événement(s) supprimé(s) !`);
+    } catch (error) {
+        console.error('Erreur suppression série:', error);
+        alert('Erreur lors de la suppression de la série');
+    }
+};
+    
     const getStatutInfo = (statut) => {
         return statutsOptions.find(s => s.value === statut) || statutsOptions[0];
     };
@@ -2827,14 +2867,32 @@ return filtered;
                                                             >
                                                                 ✏️
                                                             </button>
-                                                            <button
-                                                                className="btn btn-danger"
-                                                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
-                                                                onClick={() => onDelete(vente.id)}
-                                                                title="Supprimer"
-                                                            >
-                                                                🗑️
-                                                            </button>
+                                                            <div style={{ display: 'flex', gap: '0.25rem' }}>
+    <button
+        className="btn btn-danger"
+        style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+        onClick={(e) => {
+            e.stopPropagation();
+            handleDeleteEvent(evt.id);
+        }}
+        title="Supprimer cet événement"
+    >
+        🗑️
+    </button>
+    {evt.seriesId && (
+        <button
+            className="btn btn-danger"
+            style={{ padding: '0.25rem 0.5rem', fontSize: '0.65rem', background: '#dc2626' }}
+            onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteSeries(evt.seriesId);
+            }}
+            title="Supprimer toute la série"
+        >
+            🗑️ Série
+        </button>
+    )}
+</div>
                                                         </div>
                                                     )}
                                                 </td>
