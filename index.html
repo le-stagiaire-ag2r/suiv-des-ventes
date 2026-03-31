@@ -937,30 +937,45 @@ const handleDeleteSeries = async (seriesId) => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                     <h2 style={{ fontSize: '1.5rem', fontWeight: '700', textTransform: 'capitalize' }}>
                         📅 Planning - {monthName}
-                    </h2>
+                </h2>
+                
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <button 
+                        className="btn btn-secondary"
+                        onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1))}
+                    >
+                        ◀
+                    </button>
+                    <button 
+                        className="btn btn-secondary"
+                        onClick={() => setSelectedDate(new Date())}
+                    >
+                        Aujourd'hui
+                    </button>
+                    <button 
+                        className="btn btn-secondary"
+                        onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1))}
+                    >
+                        ▶
+                    </button>
                     
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '0.25rem', marginLeft: '1rem' }}>
                         <button 
-                            className="btn btn-secondary"
-                            onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1))}
+                            className={`btn ${viewMode === 'mois' ? 'btn-primary' : 'btn-secondary'}`}
+                            onClick={() => setViewMode('mois')}
                         >
-                            ◀
+                            📅 Mois
                         </button>
                         <button 
-                            className="btn btn-secondary"
-                            onClick={() => setSelectedDate(new Date())}
+                            className={`btn ${viewMode === 'semaine' ? 'btn-primary' : 'btn-secondary'}`}
+                            onClick={() => setViewMode('semaine')}
                         >
-                            Aujourd'hui
-                        </button>
-                        <button 
-                            className="btn btn-secondary"
-                            onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1))}
-                        >
-                            ▶
+                            📆 Semaine
                         </button>
                     </div>
                 </div>
-
+            </div>
+            
                 {/* Légende des statuts */}
                 <div style={{ 
                     display: 'flex', 
