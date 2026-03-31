@@ -977,13 +977,6 @@ const getWeekDays = () => {
 const days = getDaysInMonth();
 const weekDays = getWeekDays();
 const monthName = selectedDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-    const dayEvents = React.useMemo(() => {
-    if (!editingDate) return [];
-    const dateStr = formatDate(editingDate);
-    const targetEmail = formData.targetEmail || currentUser.email;
-    const events = plannings[targetEmail]?.[dateStr] || [];
-    return Array.isArray(events) ? events : (events ? [events] : []);
-}, [editingDate, formData.targetEmail, currentUser.email, plannings]);
     return (
         <div className="container" style={{ paddingTop: '1.5rem' }}>
             <div className="card">
