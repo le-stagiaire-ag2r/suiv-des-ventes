@@ -888,6 +888,39 @@ const handleDeleteEvent = async (eventId) => {
                     ))}
                 </div>
 
+                 {/* Filtres commerciaux */}
+                <div style={{ marginBottom: '1rem', padding: '1rem', background: '#f9fafb', borderRadius: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                        <button 
+                            className="btn btn-secondary"
+                            style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+                            onClick={() => {
+                                const allVisible = {};
+                                commerciaux.forEach(c => allVisible[c.email] = true);
+                                setVisibleCommercials(allVisible);
+                                localStorage.setItem(`planning_visible_${currentUser.email}`, JSON.stringify(allVisible));
+                            }}
+                        >
+                            ✅ Tout sélectionner
+                        </button>
+                        <button 
+                            className="btn btn-secondary"
+                            style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+                            onClick={() => {
+                                const allHidden = {};
+                                commerciaux.forEach(c => allHidden[c.email] = false);
+                                setVisibleCommercials(allHidden);
+                                localStorage.setItem(`planning_visible_${currentUser.email}`, JSON.stringify(allHidden));
+                            }}
+                        >
+                            ❌ Tout décocher
+                        </button>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                        {commerciaux.filter(c => visibleCommercials[c.email] !== false).length} / {commerciaux.length} commerciaux affichés
+                    </div>
+                </div>
+
               {/* Calendrier */}
                 <div style={{ overflowX: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
