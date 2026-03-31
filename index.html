@@ -595,13 +595,6 @@ function CommentModal({ vente, onClose }) {
     </>
 )}
 
-<button 
-    className={`btn ${currentView === 'calendrier' ? 'btn-primary' : 'btn-secondary'}`}
-    onClick={() => setCurrentView('calendrier')}
->
-    📅 Planning
-</button>
-
 {currentUser.type === 'admin' && (
     <>
         <button 
@@ -735,22 +728,29 @@ function CalendrierPlanning({ currentUser }) {
         return date.toISOString().split('T')[0];
     };
 
-    const handleOpenModal = (date) => {
+    const handleOpenModal = (date, commercialEmail = null) => {
     setEditingDate(date);
+    
+    // Si admin modifie un autre commercial, utiliser son email
+    const targetEmail = commercialEmail || currentUser.email;
     
     // Charger les événements existants du jour
     const dateStr = formatDate(date);
-    const existing = plannings[currentUser.email]?.[dateStr];
+    const existing = plannings[targetEmail]?.[dateStr];
     const events = Array.isArray(existing) ? existing : (existing ? [existing] : []);
     setDayEvents(events);
     
     // Toujours ouvrir avec un formulaire vide pour ajouter un nouvel événement
     setFormData({
-        statut: 'disponible',
+        statut: 'permanence',
         lieu: '',
         heureDebut: '09:00',
         heureFin: '18:00',
-        commentaire: ''
+        commentaire: '',
+        repeter: false,
+        typeRecurrence: 'semaine',
+        dateFin: '',
+        targetEmail: targetEmail  // Sauvegarder l'email cible
     });
     setShowModal(true);
 };
@@ -759,7 +759,9 @@ function CalendrierPlanning({ currentUser }) {
     if (!editingDate) return;
     
     try {
-        const docRef = db.collection('calendrier').doc(currentUser.email);
+        // Utiliser l'email cible (pour admin qui modifie un autre commercial)
+const targetEmail = formData.targetEmail || currentUser.email;
+const docRef = db.collection('calendrier').doc(targetEmail);
         const doc = await docRef.get();
         const existingData = doc.exists ? doc.data() : {};
         
@@ -853,7 +855,9 @@ const handleDeleteEvent = async (eventId) => {
     const dateStr = formatDate(editingDate);
     
     try {
-        const docRef = db.collection('calendrier').doc(currentUser.email);
+       // Utiliser l'email cible si disponible
+const targetEmail = formData.targetEmail || currentUser.email;
+const docRef = db.collection('calendrier').doc(targetEmail);
         const doc = await docRef.get();
         const existingData = doc.exists ? doc.data() : {};
         const existingEvents = existingData[dateStr] || [];
@@ -1060,6 +1064,7 @@ const todayDate = new Date();
 todayDate.setHours(0, 0, 0, 0);
 const isToday = formatDate(todayDate) === dateStr;
 const isCurrentUser = commercial.email === currentUser.email;
+const canEdit = currentUser.type === 'admin' || isCurrentUser;
 const isWeekend = date.getDay() === 0 || date.getDay() === 6;
 
 return (
@@ -1076,7 +1081,7 @@ return (
                                                     verticalAlign: 'middle',
                                                     height: '60px'
                                                 }}
-                                                onClick={() => isCurrentUser && !isWeekend && handleOpenModal(date)}
+                                               onClick={() => canEdit && !isWeekend && handleOpenModal(date, commercial.email)}
 onMouseEnter={(e) => {
     if (isCurrentUser && !isWeekend) {
         e.currentTarget.style.background = '#e5e7eb';
