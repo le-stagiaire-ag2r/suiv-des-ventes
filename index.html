@@ -649,7 +649,7 @@ function CalendrierPlanning({ currentUser }) {
     const [editingDate, setEditingDate] = useState(null);
 
     const [formData, setFormData] = useState({
-        statut: 'disponible',
+        statut: 'permanence',
         lieu: '',
         heureDebut: '09:00',
         heureFin: '18:00',
@@ -659,11 +659,9 @@ function CalendrierPlanning({ currentUser }) {
     const [dayEvents, setDayEvents] = useState([]);
 
     const statutsOptions = [
-        { value: 'disponible', label: 'Disponible', color: '#10b981' },
         { value: 'permanence', label: 'En permanence', color: '#3b82f6', needsLieu: true },
         { value: 'teletravail', label: 'Télétravail', color: '#8b5cf6' },
         { value: 'conges', label: 'Congés', color: '#f59e0b' },
-        { value: 'maladie', label: 'Arrêt maladie', color: '#ef4444' },
         { value: 'formation', label: 'Formation', color: '#06b6d4' },
         { value: 'deplacement', label: 'Déplacement', color: '#ec4899', needsLieu: true },
         { value: 'indisponible', label: 'Indisponible', color: '#6b7280' }
