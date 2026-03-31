@@ -1395,13 +1395,13 @@ const events = Array.isArray(dayEventsGrid) ? dayEventsGrid : (dayEventsGrid ? [
         return (
             <div
                 key={`${dateStr}-${evtIdx}`}
-                style={{
+style={{
     position: 'absolute',
     top: `${top + 80}px`,
-    left: `calc(80px + ${leftPercent}% + 2px)`,
-    width: `calc(${100/7}% - 5px)`,
-                    height: `${height}px`,
-                    background: `${statutInfo.color}20`,
+    left: `calc(80px + ${leftPercent}%)`,
+    width: `calc(${100/7}% - 4px)`,
+    height: `${height}px`,
+    background: `${statutInfo.color}20`,
                     borderLeft: `4px solid ${statutInfo.color}`,
                     padding: '0.5rem',
                     fontSize: '0.75rem',
