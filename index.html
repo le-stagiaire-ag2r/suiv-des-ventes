@@ -952,7 +952,9 @@ const planning = plannings[commercial.email]?.[dateStr];
 const firstEvent = Array.isArray(planning) ? planning[0] : planning;
 const statutInfo = firstEvent ? getStatutInfo(firstEvent.statut) : null;
 const hasMultipleEvents = Array.isArray(planning) && planning.length > 1;
-const isToday = formatDate(new Date()) === dateStr;
+const todayDate = new Date();
+todayDate.setHours(0, 0, 0, 0);
+const isToday = formatDate(todayDate) === dateStr;
 const isCurrentUser = commercial.email === currentUser.email;
 const isWeekend = date.getDay() === 0 || date.getDay() === 6;
 
