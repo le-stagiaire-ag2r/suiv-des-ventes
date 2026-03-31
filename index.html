@@ -812,12 +812,12 @@ const docRef = db.collection('calendrier').doc(targetEmail);
             }
             
             // Créer tous les événements
-            const updates = {};
-            datesToCreate.forEach((date, idx) => {
-                const dateStr = formatDate(date);
-                const existingEvents = existingData[dateStr] || [];
-                const seriesId = `series_${Date.now()}`;
-const eventWithUniqueId = {
+const seriesId = `series_${Date.now()}`;  
+const updates = {};
+datesToCreate.forEach((date, idx) => {
+    const dateStr = formatDate(date);
+    const existingEvents = existingData[dateStr] || [];
+    const eventWithUniqueId = {
     ...newEvent,
     id: `${Date.now()}_${idx}`,
     seriesId: seriesId  // Marquer tous les événements de la même série
