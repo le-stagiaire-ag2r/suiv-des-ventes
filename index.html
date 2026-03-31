@@ -961,9 +961,11 @@ const handleDeleteSeries = async (seriesId) => {
     return statutsOptions.find(s => s.value === statut) || statutsOptions[0];
 };
 
-const getWeekDays = () => {
+    const getWeekDays = () => {
     const start = new Date(selectedDate);
-    start.setDate(start.getDate() - start.getDay() + 1); // Lundi de la semaine
+    const dayOfWeek = start.getDay();
+    const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Lundi = 0, Dimanche = 6
+    start.setDate(start.getDate() + diff);
     
     const days = [];
     for (let i = 0; i < 7; i++) {
@@ -973,7 +975,7 @@ const getWeekDays = () => {
     }
     return days;
 };
-
+    
 const days = getDaysInMonth();
 const weekDays = getWeekDays();
 const monthName = selectedDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
