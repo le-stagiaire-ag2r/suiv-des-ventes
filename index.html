@@ -2849,10 +2849,10 @@ return filtered;
                                                                 title="En attente"
                                                             />
                                                             <button
-                                                                className={`statut-btn statut-btn-aucun ${!vente.statut || vente.statut === '' ? 'active' : ''}`}
-                                                                onClick={() => onUpdateStatut(vente.id, '')}
-                                                                title="Validée"
-                                                            />
+    className={`statut-btn statut-btn-aucun ${!vente.statut || vente.statut === '' ? 'active' : ''}`}
+    onClick={() => onUpdateStatut(vente.id, '')}
+    title="Validée"
+/>
                                                         </div>
                                                     )}
                                                 </td>
@@ -2867,32 +2867,14 @@ return filtered;
                                                             >
                                                                 ✏️
                                                             </button>
-                                                            <div style={{ display: 'flex', gap: '0.25rem' }}>
-    <button
-        className="btn btn-danger"
-        style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
-        onClick={(e) => {
-            e.stopPropagation();
-            handleDeleteEvent(evt.id);
-        }}
-        title="Supprimer cet événement"
-    >
-        🗑️
-    </button>
-    {evt.seriesId && (
-        <button
-            className="btn btn-danger"
-            style={{ padding: '0.25rem 0.5rem', fontSize: '0.65rem', background: '#dc2626' }}
-            onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteSeries(evt.seriesId);
-            }}
-            title="Supprimer toute la série"
-        >
-            🗑️ Série
-        </button>
-    )}
-</div>
+                                                            <button
+                                                                className="btn btn-danger"
+                                                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                                                                onClick={() => onDelete(vente.id)}
+                                                                title="Supprimer"
+                                                            >
+                                                                🗑️
+                                                            </button>
                                                         </div>
                                                     )}
                                                 </td>
