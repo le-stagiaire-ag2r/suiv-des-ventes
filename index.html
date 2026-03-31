@@ -1183,16 +1183,48 @@ onMouseLeave={(e) => {
             )}
 
             {/* Vue Semaine */}
-            {viewMode === 'semaine' && (
-                <div style={{ marginTop: '1rem' }}>
-                    <h3 style={{ textAlign: 'center', color: '#6b7280' }}>
-                        📆 Vue semaine - En construction 🚧
-                    </h3>
-                    <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: '0.875rem' }}>
-                        Grille horaire détaillée bientôt disponible !
-                    </p>
+{viewMode === 'semaine' && (
+    <div style={{ overflowX: 'auto', marginTop: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '80px repeat(7, 1fr)', gap: '1px', background: '#e5e7eb' }}>
+            {/* En-tête avec les jours */}
+            <div style={{ background: 'white', padding: '0.75rem', fontWeight: '600' }}>Heure</div>
+            {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((jour, idx) => (
+                <div key={idx} style={{ 
+                    background: idx >= 5 ? '#f9fafb' : 'white', 
+                    padding: '0.75rem', 
+                    fontWeight: '600',
+                    textAlign: 'center'
+                }}>
+                    {jour}
                 </div>
-            )}
+            ))}
+            
+            {/* Grille horaire 08h-19h */}
+            {Array.from({ length: 12 }, (_, i) => i + 8).map(hour => (
+                <>
+                    <div key={`hour-${hour}`} style={{ 
+                        background: 'white', 
+                        padding: '0.5rem', 
+                        fontSize: '0.75rem',
+                        color: '#6b7280',
+                        borderRight: '1px solid #e5e7eb'
+                    }}>
+                        {hour}:00
+                    </div>
+                    {[0, 1, 2, 3, 4, 5, 6].map(day => (
+                        <div key={`${hour}-${day}`} style={{ 
+                            background: day >= 5 ? '#f9fafb' : 'white',
+                            minHeight: '60px',
+                            padding: '0.25rem'
+                        }}>
+                            {/* Les événements seront ajoutés ici */}
+                        </div>
+                    ))}
+                </>
+            ))}
+        </div>
+    </div>
+)}
                 
             {/* Modal d'édition */}
             {showModal && (
