@@ -977,6 +977,11 @@ const getWeekDays = () => {
 const days = getDaysInMonth();
 const weekDays = getWeekDays();
 const monthName = selectedDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+const dateStr = editingDate ? formatDate(editingDate) : '';
+const targetEmail = formData.targetEmail || currentUser.email;
+const dayEvents = Array.isArray(plannings[targetEmail]?.[dateStr]) 
+    ? plannings[targetEmail][dateStr] 
+    : (plannings[targetEmail]?.[dateStr] ? [plannings[targetEmail][dateStr]] : []);    
     return (
         <div className="container" style={{ paddingTop: '1.5rem' }}>
             <div className="card">
@@ -1386,7 +1391,7 @@ onMouseLeave={(e) => {
         
         const top = startOffset * 60; // 60px par heure
         const height = duration * 60;
-        const left = 80 + (dayIdx * ((100) / 7)) + '%'; // Position horizontale
+        const leftPercent = (dayIdx / 7) * 100;
         
         const statutInfo = getStatutInfo(evt.statut);
         
@@ -1394,10 +1399,10 @@ onMouseLeave={(e) => {
             <div
                 key={`${dateStr}-${evtIdx}`}
                 style={{
-                    position: 'absolute',
-                    top: `${top + 80}px`, // +80px pour l'en-tête
-                    left: left,
-                    width: `calc(${100/7}% - 2px)`,
+    position: 'absolute',
+    top: `${top + 80}px`,
+    left: `calc(80px + ${leftPercent}%)`,
+    width: `calc(${100/7}% - 2px)`,
                     height: `${height}px`,
                     background: `${statutInfo.color}20`,
                     borderLeft: `4px solid ${statutInfo.color}`,
