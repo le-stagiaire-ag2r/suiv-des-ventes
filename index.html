@@ -604,12 +604,6 @@ function CommentModal({ vente, onClose }) {
             👁️ Toutes les ventes ({ventesCount})
         </button>
         <button 
-            className={`btn ${currentView === 'calendrier' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setCurrentView('calendrier')}
-        >
-            📅 Planning équipe
-        </button>
-        <button 
             className={`btn ${currentView === 'gestion' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setCurrentView('gestion')}
         >
@@ -617,6 +611,13 @@ function CommentModal({ vente, onClose }) {
         </button>
     </>
 )}
+
+<button 
+    className={`btn ${currentView === 'calendrier' ? 'btn-primary' : 'btn-secondary'}`}
+    onClick={() => setCurrentView('calendrier')}
+>
+    📅 Planning équipe
+</button>
 
 <button className="btn btn-success" onClick={onExport}>
     💾 Export CSV
