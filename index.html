@@ -1376,8 +1376,8 @@ onMouseLeave={(e) => {
 {/* Événements en position absolue */}
 {weekDays.map((date, dayIdx) => {
     const dateStr = formatDate(date);
-    const dayEvents = plannings[selectedCommercial]?.[dateStr] || [];
-    const events = Array.isArray(dayEvents) ? dayEvents : (dayEvents ? [dayEvents] : []);
+    const dayEventsGrid = plannings[selectedCommercial]?.[dateStr] || [];
+const events = Array.isArray(dayEventsGrid) ? dayEventsGrid : (dayEventsGrid ? [dayEventsGrid] : []);
     
     return events.map((evt, evtIdx) => {
         if (!evt || !evt.heureDebut || !evt.heureFin) return null;
