@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suivi des Ventes - Assurance (React)</title>
-     
+
     <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -1398,8 +1398,8 @@ const events = Array.isArray(dayEventsGrid) ? dayEventsGrid : (dayEventsGrid ? [
                 style={{
     position: 'absolute',
     top: `${top + 80}px`,
-    left: `calc(80px + ${leftPercent}%)`,
-    width: `calc(${100/7}% - 2px)`,
+    left: `calc(80px + ${leftPercent}% + 2px)`,
+    width: `calc(${100/7}% - 5px)`
                     height: `${height}px`,
                     background: `${statutInfo.color}20`,
                     borderLeft: `4px solid ${statutInfo.color}`,
