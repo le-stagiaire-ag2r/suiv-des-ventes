@@ -658,6 +658,11 @@ function CalendrierPlanning({ currentUser }) {
     
     const [dayEvents, setDayEvents] = useState([]);
 
+    const [visibleCommercials, setVisibleCommercials] = useState(() => {
+    const saved = localStorage.getItem(`planning_visible_${currentUser.email}`);
+    return saved ? JSON.parse(saved) : {};
+});
+    
     const statutsOptions = [
         { value: 'permanence', label: 'En permanence', color: '#3b82f6', needsLieu: true },
         { value: 'teletravail', label: 'Télétravail', color: '#8b5cf6' },
@@ -928,19 +933,33 @@ const handleDeleteEvent = async (eventId) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {commerciaux.map(commercial => (
+                            {commerciaux
+    .filter(commercial => visibleCommercials[commercial.email] !== false)
+    .map(commercial => (
                                 <tr key={commercial.email}>
                                     <td style={{ 
-                                        padding: '0.75rem',
-                                        borderBottom: '1px solid #e5e7eb',
-                                        fontWeight: '500',
-                                        position: 'sticky',
-                                        left: 0,
-                                        background: 'white',
-                                        zIndex: 5
-                                    }}>
-                                        {commercial.name}
-                                    </td>
+    padding: '0.75rem',
+    borderBottom: '1px solid #e5e7eb',
+    fontWeight: '500',
+    position: 'sticky',
+    left: 0,
+    background: 'white',
+    zIndex: 5
+}}>
+    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+        <input
+            type="checkbox"
+            checked={visibleCommercials[commercial.email] !== false}
+            onChange={(e) => {
+                const newVisible = { ...visibleCommercials, [commercial.email]: e.target.checked };
+                setVisibleCommercials(newVisible);
+                localStorage.setItem(`planning_visible_${currentUser.email}`, JSON.stringify(newVisible));
+            }}
+            style={{ cursor: 'pointer' }}
+        />
+        <span>{commercial.name}</span>
+    </label>
+</td>
                                     {days.map((date, idx) => {
                                         if (!date) {
                                             return <td key={idx} style={{ borderBottom: '1px solid #e5e7eb' }}></td>;
