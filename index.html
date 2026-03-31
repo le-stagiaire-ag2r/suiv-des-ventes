@@ -648,12 +648,15 @@ function CalendrierPlanning({ currentUser }) {
     const [showModal, setShowModal] = useState(false);
     const [editingDate, setEditingDate] = useState(null);
 
-    const [formData, setFormData] = useState({
-        statut: 'permanence',
-        lieu: '',
-        heureDebut: '09:00',
-        heureFin: '18:00',
-        commentaire: ''
+  const [formData, setFormData] = useState({
+    statut: 'permanence',
+    lieu: '',
+    heureDebut: '09:00',
+    heureFin: '18:00',
+    commentaire: '',
+    repeter: false,
+    typeRecurrence: 'semaine',
+    dateFin: ''
     });
     
     const [dayEvents, setDayEvents] = useState([]);
@@ -1191,7 +1194,48 @@ onMouseLeave={(e) => {
                                 />
                             </div>
                         </div>
+</div>
 
+                            {/* Récurrence */}
+                            <div className="form-group">
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.repeter}
+                                        onChange={(e) => setFormData({...formData, repeter: e.target.checked})}
+                                    />
+                                    <span className="form-label" style={{ marginBottom: 0 }}>🔁 Répéter cet événement</span>
+                                </label>
+                            </div>
+
+                            {formData.repeter && (
+                                <>
+                                    <div className="form-group">
+                                        <label className="form-label">Fréquence</label>
+                                        <select
+                                            className="form-select"
+                                            value={formData.typeRecurrence}
+                                            onChange={(e) => setFormData({...formData, typeRecurrence: e.target.value})}
+                                        >
+                                            <option value="jour">Tous les jours (Lun-Ven)</option>
+                                            <option value="semaine">Chaque semaine (même jour)</option>
+                                            <option value="mois">Chaque mois (même date)</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label className="form-label">Jusqu'au</label>
+                                        <input
+                                            type="date"
+                                            className="form-control"
+                                            value={formData.dateFin}
+                                            onChange={(e) => setFormData({...formData, dateFin: e.target.value})}
+                                            min={editingDate ? formatDate(editingDate) : ''}
+                                        />
+                                    </div>
+                                </>
+                            )}
+                      
                         <div className="modal-footer">
                             <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
                                 Annuler
