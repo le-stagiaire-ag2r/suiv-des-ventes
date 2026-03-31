@@ -1032,9 +1032,10 @@ const handleDeleteSeries = async (seriesId) => {
                     </div>
                 </div>
 
-              {/* Calendrier */}
-                <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              {/* Vue Mois */}
+{viewMode === 'mois' && (
+    <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
                             <tr>
                                 <th style={{ 
@@ -1176,9 +1177,22 @@ onMouseLeave={(e) => {
                                     })}
                                 </tr>
                             ))}
-                        </tbody>
+                       </tbody>
                     </table>
                 </div>
+            )}
+
+            {/* Vue Semaine */}
+            {viewMode === 'semaine' && (
+                <div style={{ marginTop: '1rem' }}>
+                    <h3 style={{ textAlign: 'center', color: '#6b7280' }}>
+                        📆 Vue semaine - En construction 🚧
+                    </h3>
+                    <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: '0.875rem' }}>
+                        Grille horaire détaillée bientôt disponible !
+                    </p>
+                </div>
+            )}
                 
             {/* Modal d'édition */}
             {showModal && (
