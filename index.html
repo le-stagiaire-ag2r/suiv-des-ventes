@@ -770,16 +770,49 @@ const docRef = db.collection('calendrier').doc(targetEmail);
         const { repeter, typeRecurrence, dateFin, ...eventData } = formData;
         
         const newEvent = {
-            id: Date.now().toString(),
-            ...eventData,
-            dateCreation: new Date().toISOString()
-        };
+    id: formData.editingEventId || Date.now().toString(),
+    ...eventData,
+    dateCreation: new Date().toISOString()
+};
+
+// Validation des chevauchements si pas de récurrence
+if (!formData.repeter) {
+    const dateStr = formatDate(editingDate);
+    const existingEvents = existingData[dateStr] || [];
+    
+    // Vérifier les chevauchements
+    const hasOverlap = (Array.isArray(existingEvents) ? existingEvents : [existingEvents]).some(evt => {
+        if (!evt || !evt.heureDebut || !evt.heureFin) return false;
         
-        // Si pas de récurrence, créer un seul événement
-        if (!formData.repeter || !formData.dateFin) {
-            const dateStr = formatDate(editingDate);
-            const existingEvents = existingData[dateStr] || [];
-            const updatedEvents = Array.isArray(existingEvents) ? [...existingEvents, newEvent] : [newEvent];
+        const newStart = formData.heureDebut;
+        const newEnd = formData.heureFin;
+        const existingStart = evt.heureDebut;
+        const existingEnd = evt.heureFin;
+        
+        // Vérifier si les créneaux se chevauchent
+        return (newStart < existingEnd && newEnd > existingStart);
+    });
+    
+    if (hasOverlap) {
+        alert('⚠️ Un événement existe déjà sur ce créneau horaire ! Veuillez choisir un autre horaire.');
+        return;
+    }
+}
+
+// Si pas de récurrence, créer ou modifier un seul événement
+if (!formData.repeter || !formData.dateFin) {
+    const dateStr = formatDate(editingDate);
+    const existingEvents = existingData[dateStr] || [];
+    
+    let updatedEvents;
+    if (formData.editingEventId) {
+        // Mode modification : remplacer l'événement existant
+        updatedEvents = (Array.isArray(existingEvents) ? existingEvents : [existingEvents])
+            .map(evt => evt.id === formData.editingEventId ? newEvent : evt);
+    } else {
+        // Mode ajout : ajouter le nouvel événement
+        updatedEvents = Array.isArray(existingEvents) ? [...existingEvents, newEvent] : [newEvent];
+    }
             
             await docRef.set({
                 [dateStr]: updatedEvents
@@ -979,17 +1012,25 @@ const monthName = selectedDate.toLocaleDateString('fr-FR', { month: 'long', year
                             onClick={() => setViewMode('mois')}
                         >
                             📅 Mois
-                        </button>
-                        <button 
-                            className={`btn ${viewMode === 'semaine' ? 'btn-primary' : 'btn-secondary'}`}
-                            onClick={() => setViewMode('semaine')}
-                        >
-                            📆 Semaine
-                        </button>
-                    </div>
+                    </button>
+                    <button 
+                        className={`btn ${viewMode === 'semaine' ? 'btn-primary' : 'btn-secondary'}`}
+                        onClick={() => setViewMode('semaine')}
+                    >
+                        📆 Semaine
+                    </button>
                 </div>
+                
+                <button 
+                    className="btn btn-secondary"
+                    style={{ marginLeft: '1rem' }}
+                    onClick={() => window.print()}
+                    title="Exporter en PDF"
+                >
+                    📄 Export PDF
+                </button>
             </div>
-            
+        </div>
                 {/* Légende des statuts */}
                 <div style={{ 
                     display: 'flex', 
@@ -1199,6 +1240,37 @@ onMouseLeave={(e) => {
           {/* Vue Semaine */}
 {viewMode === 'semaine' && (
     <div style={{ marginTop: '1rem' }}>
+        {/* Navigation semaine */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', padding: '1rem', background: '#f9fafb', borderRadius: '0.5rem' }}>
+            <button 
+                className="btn btn-secondary"
+                onClick={() => {
+                    const newDate = new Date(selectedDate);
+                    newDate.setDate(newDate.getDate() - 7);
+                    setSelectedDate(newDate);
+                }}
+            >
+                ◀ Semaine précédente
+            </button>
+            
+            <div style={{ fontWeight: '600', fontSize: '1rem' }}>
+                Semaine du {weekDays[0]?.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} 
+                {' au '}
+                {weekDays[6]?.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </div>
+            
+            <button 
+                className="btn btn-secondary"
+                onClick={() => {
+                    const newDate = new Date(selectedDate);
+                    newDate.setDate(newDate.getDate() + 7);
+                    setSelectedDate(newDate);
+                }}
+            >
+                Semaine suivante ▶
+            </button>
+        </div>
+        
         {/* Sélecteur de commercial */}
         <div style={{ marginBottom: '1rem' }}>
             <label style={{ fontSize: '0.875rem', fontWeight: '600', marginRight: '0.5rem' }}>
@@ -1221,7 +1293,7 @@ onMouseLeave={(e) => {
 
         {selectedCommercial ? (
             <div style={{ overflowX: 'auto' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '80px repeat(7, 1fr)', gap: '1px', background: '#e5e7eb', minWidth: '800px' }}>
+               <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '80px repeat(7, 1fr)', gap: '1px', background: '#e5e7eb', minWidth: '800px' }}>
                     {/* En-tête avec les jours */}
                     <div style={{ background: 'white', padding: '0.75rem', fontWeight: '600' }}>Heure</div>
                     {weekDays.map((date, idx) => {
@@ -1241,59 +1313,111 @@ onMouseLeave={(e) => {
                         );
                     })}
                     
-                    {/* Grille horaire 08h-19h */}
-                    {Array.from({ length: 12 }, (_, i) => i + 8).map(hour => (
-                        <>
-                            <div key={`hour-${hour}`} style={{ 
-                                background: 'white', 
-                                padding: '0.5rem', 
-                                fontSize: '0.75rem',
-                                color: '#6b7280',
-                                borderRight: '1px solid #e5e7eb'
-                            }}>
-                                {hour}:00
-                            </div>
-                            {weekDays.map((date, dayIdx) => {
-                                const dateStr = formatDate(date);
-                                const dayEvents = plannings[selectedCommercial]?.[dateStr] || [];
-                                const eventsInHour = (Array.isArray(dayEvents) ? dayEvents : [dayEvents])
-                                    .filter(evt => {
-                                        if (!evt || !evt.heureDebut || !evt.heureFin) return false;
-                                        const start = parseInt(evt.heureDebut.split(':')[0]);
-                                        const end = parseInt(evt.heureFin.split(':')[0]);
-                                        return hour >= start && hour < end;
-                                    });
-                                
-                                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-                                
-                                return (
-                                    <div key={`${hour}-${dayIdx}`} style={{ 
-                                        background: isWeekend ? '#f9fafb' : 'white',
-                                        minHeight: '60px',
-                                        padding: '0.25rem',
-                                        position: 'relative'
-                                    }}>
-                                        {eventsInHour.map((evt, idx) => {
-                                            const statutInfo = getStatutInfo(evt.statut);
-                                            return (
-                                                <div key={idx} style={{
-                                                    background: `${statutInfo.color}20`,
-                                                    borderLeft: `3px solid ${statutInfo.color}`,
-                                                    padding: '0.25rem',
-                                                    fontSize: '0.7rem',
-                                                    marginBottom: '0.25rem',
-                                                    borderRadius: '2px'
-                                                }}>
-                                                    <div style={{ fontWeight: '600' }}>{statutInfo.label}</div>
-                                                    {evt.lieu && <div style={{ color: '#6b7280' }}>{evt.lieu}</div>}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                );
-                            })}
-                        </>
-                    ))}
+                   {/* Grille horaire 08h-19h */}
+<div style={{ display: 'contents' }}>
+    {/* Lignes d'heures */}
+    {Array.from({ length: 12 }, (_, i) => i + 8).map(hour => (
+        <>
+            <div key={`hour-${hour}`} style={{ 
+                background: 'white', 
+                padding: '0.5rem', 
+                fontSize: '0.75rem',
+                color: '#6b7280',
+                borderRight: '1px solid #e5e7eb'
+            }}>
+                {hour}:00
+            </div>
+            {weekDays.map((date, dayIdx) => {
+                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                const canEdit = currentUser.type === 'admin' || selectedCommercial === currentUser.email;
+                
+                return (
+                    <div 
+                        key={`${hour}-${dayIdx}`} 
+                        style={{ 
+                            background: isWeekend ? '#f9fafb' : 'white',
+                            minHeight: '60px',
+                            padding: '0.25rem',
+                            position: 'relative',
+                            cursor: canEdit && !isWeekend ? 'pointer' : 'default',
+                            transition: 'background 0.2s'
+                        }}
+                        onClick={() => {
+                            if (canEdit && !isWeekend) {
+                                handleOpenModal(date, selectedCommercial);
+                            }
+                        }}
+                        onMouseEnter={(e) => {
+                            if (canEdit && !isWeekend) {
+                                e.currentTarget.style.background = '#e5e7eb';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (canEdit && !isWeekend) {
+                                e.currentTarget.style.background = isWeekend ? '#f9fafb' : 'white';
+                            }
+                        }}
+                    >
+                        {/* Les événements seront affichés par-dessus */}
+                    </div>
+                );
+            })}
+        </>
+    ))}
+</div>
+
+{/* Événements en position absolue */}
+{weekDays.map((date, dayIdx) => {
+    const dateStr = formatDate(date);
+    const dayEvents = plannings[selectedCommercial]?.[dateStr] || [];
+    const events = Array.isArray(dayEvents) ? dayEvents : (dayEvents ? [dayEvents] : []);
+    
+    return events.map((evt, evtIdx) => {
+        if (!evt || !evt.heureDebut || !evt.heureFin) return null;
+        
+        const startHour = parseInt(evt.heureDebut.split(':')[0]);
+        const startMin = parseInt(evt.heureDebut.split(':')[1]);
+        const endHour = parseInt(evt.heureFin.split(':')[0]);
+        const endMin = parseInt(evt.heureFin.split(':')[1]);
+        
+        // Calculer la position et hauteur
+        const startOffset = ((startHour - 8) * 60 + startMin) / 60; // Heures depuis 8h
+        const duration = ((endHour * 60 + endMin) - (startHour * 60 + startMin)) / 60; // Durée en heures
+        
+        const top = startOffset * 60; // 60px par heure
+        const height = duration * 60;
+        const left = 80 + (dayIdx * ((100) / 7)) + '%'; // Position horizontale
+        
+        const statutInfo = getStatutInfo(evt.statut);
+        
+        return (
+            <div
+                key={`${dateStr}-${evtIdx}`}
+                style={{
+                    position: 'absolute',
+                    top: `${top + 80}px`, // +80px pour l'en-tête
+                    left: left,
+                    width: `calc(${100/7}% - 2px)`,
+                    height: `${height}px`,
+                    background: `${statutInfo.color}20`,
+                    borderLeft: `4px solid ${statutInfo.color}`,
+                    padding: '0.5rem',
+                    fontSize: '0.75rem',
+                    borderRadius: '4px',
+                    zIndex: 1,
+                    pointerEvents: 'none',
+                    overflow: 'hidden'
+                }}
+            >
+                <div style={{ fontWeight: '700', marginBottom: '0.25rem' }}>
+                    {evt.heureDebut} - {evt.heureFin}
+                </div>
+                <div style={{ fontWeight: '600' }}>{statutInfo.label}</div>
+                {evt.lieu && <div style={{ color: '#6b7280', fontSize: '0.7rem' }}>{evt.lieu}</div>}
+            </div>
+        );
+    });
+})}
                 </div>
             </div>
         ) : (
@@ -1302,205 +1426,227 @@ onMouseLeave={(e) => {
             </div>
         )}
     </div>
-)}     
-            {/* Modal d'édition */}
-            {showModal && (
-                <div className="modal-overlay" onClick={() => setShowModal(false)}>
-                    <div className="modal" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <div className="modal-title">
-                                Modifier le statut - {editingDate?.toLocaleDateString('fr-FR')}
-                            </div>
-                        </div>
-                        
-                        <div className="modal-body">
-    {/* Liste des événements existants */}
-    {dayEvents.length > 0 && (
-        <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f9fafb', borderRadius: '0.5rem' }}>
-            <div style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem', color: '#374151' }}>
-                Événements du jour :
+)}
+
+{/* Modal d'édition */}
+{showModal && (
+    <div className="modal-overlay" onClick={() => setShowModal(false)}>
+        <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+                <div className="modal-title">
+                    Modifier le statut - {editingDate?.toLocaleDateString('fr-FR')}
+                </div>
             </div>
-            {dayEvents
-                .sort((a, b) => a.heureDebut.localeCompare(b.heureDebut))
-                .map((evt, idx) => {
-                    const statutInfo = getStatutInfo(evt.statut);
-                    return (
-                        <div key={idx} style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: '0.5rem',
-                            padding: '0.5rem',
-                            background: 'white',
-                            borderRadius: '0.25rem',
-                            marginBottom: '0.5rem',
-                            borderLeft: `3px solid ${statutInfo.color}`
-                        }}>
-                           <div style={{ flex: 1 }}>
-    <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#1f2937' }}>
-        {evt.heureDebut} - {evt.heureFin}
-        {evt.commentaire && (
-            <span style={{ fontSize: '0.7rem', color: '#9ca3af', fontWeight: 'normal', marginLeft: '0.5rem' }}>
-                ({evt.commentaire})
-            </span>
-        )}
-    </div>
-    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-        {statutInfo.label} {evt.lieu && `(${evt.lieu})`}
-    </div>
-</div>
-<div style={{ display: 'flex', gap: '0.25rem' }}>
-    <button
-        className="btn btn-danger"
-        style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
-        onClick={(e) => {
-            e.stopPropagation();
-            handleDeleteEvent(evt.id);
-        }}
-        title="Supprimer cet événement"
-    >
-        🗑️
-    </button>
-    {evt.seriesId && (
-        <button
-            className="btn btn-danger"
-            style={{ padding: '0.25rem 0.5rem', fontSize: '0.65rem', background: '#dc2626' }}
-            onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteSeries(evt.seriesId);
-            }}
-            title="Supprimer toute la série"
-        >
-            🗑️ Série
-        </button>
-    )}
-</div>
-                        </div>
-                    );
-                })}
-        </div>
-    )}
-
-    <div style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '1rem', color: '#374151' }}>
-        Ajouter un événement :
-    </div>
-
-    <div className="form-group">
-        <label className="form-label">Statut</label>
-                                <select
-                                    className="form-select"
-                                    value={formData.statut}
-                                    onChange={(e) => setFormData({ ...formData, statut: e.target.value })}
-                                >
-                                    {statutsOptions.map(s => (
-                                        <option key={s.value} value={s.value}>{s.label}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {getStatutInfo(formData.statut).needsLieu && (
-                                <div className="form-group">
-                                    <label className="form-label">Lieu / Destination</label>
-                                    <input
-                                        type="text"
-                                        className="form-input"
-                                        value={formData.lieu}
-                                        onChange={(e) => setFormData({ ...formData, lieu: e.target.value })}
-                                        placeholder="Ex: Lesquin, Paris..."
-                                    />
-                                </div>
-                            )}
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                <div className="form-group">
-                                    <label className="form-label">Heure début</label>
-                                    <input
-                                        type="time"
-                                        className="form-input"
-                                        value={formData.heureDebut}
-                                        onChange={(e) => setFormData({ ...formData, heureDebut: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label className="form-label">Heure fin</label>
-                                    <input
-                                        type="time"
-                                        className="form-input"
-                                        value={formData.heureFin}
-                                        onChange={(e) => setFormData({ ...formData, heureFin: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="form-group">
-                                <label className="form-label">Commentaire (optionnel)</label>
-                                <textarea
-                                    className="form-input"
-                                    value={formData.commentaire}
-                                    onChange={(e) => setFormData({ ...formData, commentaire: e.target.value })}
-                                    placeholder="Précisions..."
-                                    style={{ minHeight: '80px' }}
-                                />
-                            </div>
-                        </div>
-
-                            {/* Récurrence */}
-                            <div className="form-group">
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={formData.repeter}
-                                        onChange={(e) => setFormData({...formData, repeter: e.target.checked})}
-                                    />
-                                    <span className="form-label" style={{ marginBottom: 0 }}>🔁 Répéter cet événement</span>
-                                </label>
-                            </div>
-
-                            {formData.repeter && (
-                                <>
-                                    <div className="form-group">
-                                        <label className="form-label">Fréquence</label>
-                                        <select
-                                            className="form-select"
-                                            value={formData.typeRecurrence}
-                                            onChange={(e) => setFormData({...formData, typeRecurrence: e.target.value})}
-                                        >
-                                            <option value="jour">Tous les jours (Lun-Ven)</option>
-                                            <option value="semaine">Chaque semaine (même jour)</option>
-                                            <option value="mois">Chaque mois (même date)</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label className="form-label">Jusqu'au</label>
-                                        <input
-                                            type="date"
-                                            className="form-control"
-                                            value={formData.dateFin}
-                                            onChange={(e) => setFormData({...formData, dateFin: e.target.value})}
-                                            min={editingDate ? formatDate(editingDate) : ''}
-                                        />
-                                    </div>
-                                </>
-                            )}
-                      
-                        <div className="modal-footer">
-                            <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
-                                Annuler
-                            </button>
-                            <button className="btn btn-primary" onClick={handleSave}>
-                                Enregistrer
-                            </button>
-                        </div>
+       <div className="modal-body">
+            {/* Liste des événements existants */}
+            {dayEvents.length > 0 && (
+                <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f9fafb', borderRadius: '0.5rem' }}>
+                    <div style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem', color: '#374151' }}>
+                        Événements du jour :
                     </div>
+                    {dayEvents
+                        .sort((a, b) => a.heureDebut.localeCompare(b.heureDebut))
+                        .map((evt, idx) => {
+                            const statutInfo = getStatutInfo(evt.statut);
+                            return (
+                                <div key={idx} style={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    gap: '0.5rem',
+                                    padding: '0.5rem',
+                                    background: 'white',
+                                    borderRadius: '0.25rem',
+                                    marginBottom: '0.5rem',
+                                    borderLeft: `3px solid ${statutInfo.color}`
+                                }}>
+                                   <div style={{ flex: 1 }}>
+                                        <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#1f2937' }}>
+                                            {evt.heureDebut} - {evt.heureFin}
+                                            {evt.commentaire && (
+                                                <span style={{ fontSize: '0.7rem', color: '#9ca3af', fontWeight: 'normal', marginLeft: '0.5rem' }}>
+                                                    ({evt.commentaire})
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                                            {statutInfo.label} {evt.lieu && `(${evt.lieu})`}
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                        <button
+                                            className="btn btn-secondary"
+                                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setFormData({
+                                                    statut: evt.statut,
+                                                    lieu: evt.lieu || '',
+                                                    heureDebut: evt.heureDebut,
+                                                    heureFin: evt.heureFin,
+                                                    commentaire: evt.commentaire || '',
+                                                    repeter: false,
+                                                    typeRecurrence: 'semaine',
+                                                    dateFin: '',
+                                                    targetEmail: formData.targetEmail,
+                                                    editingEventId: evt.id
+                                                });
+                                            }}
+                                            title="Modifier cet événement"
+                                        >
+                                            ✏️
+                                        </button>
+                                        <button
+                                            className="btn btn-danger"
+                                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteEvent(evt.id);
+                                            }}
+                                            title="Supprimer cet événement"
+                                        >
+                                            🗑️
+                                        </button>
+                                        {evt.seriesId && (
+                                            <button
+                                                className="btn btn-danger"
+                                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.65rem', background: '#dc2626' }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteSeries(evt.seriesId);
+                                                }}
+                                                title="Supprimer toute la série"
+                                            >
+                                                🗑️ Série
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
                 </div>
             )}
+
+            <div style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '1rem', color: '#374151' }}>
+                Ajouter un événement :
+            </div>
+
+            <div className="form-group">
+                <label className="form-label">Statut</label>
+                <select
+                    className="form-select"
+                    value={formData.statut}
+                    onChange={(e) => setFormData({ ...formData, statut: e.target.value })}
+                >
+                    {statutsOptions.map(s => (
+                        <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                </select>
+            </div>
+
+            {getStatutInfo(formData.statut).needsLieu && (
+                <div className="form-group">
+                    <label className="form-label">Lieu / Destination</label>
+                    <input
+                        type="text"
+                        className="form-input"
+                        value={formData.lieu}
+                        onChange={(e) => setFormData({ ...formData, lieu: e.target.value })}
+                        placeholder="Ex: Lesquin, Paris..."
+                    />
+                </div>
+            )}
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                    <label className="form-label">Heure début</label>
+                    <input
+                        type="time"
+                        className="form-input"
+                        value={formData.heureDebut}
+                        onChange={(e) => setFormData({ ...formData, heureDebut: e.target.value })}
+                    />
+                </div>
+
+                <div className="form-group">
+                    <label className="form-label">Heure fin</label>
+                    <input
+                        type="time"
+                        className="form-input"
+                        value={formData.heureFin}
+                        onChange={(e) => setFormData({ ...formData, heureFin: e.target.value })}
+                    />
+                </div>
+            </div>
+
+            <div className="form-group">
+                <label className="form-label">Commentaire (optionnel)</label>
+                <textarea
+                    className="form-input"
+                    value={formData.commentaire}
+                    onChange={(e) => setFormData({ ...formData, commentaire: e.target.value })}
+                    placeholder="Précisions..."
+                    style={{ minHeight: '80px' }}
+                />
+            </div>
+
+            {/* Récurrence */}
+            <div className="form-group">
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <input
+                        type="checkbox"
+                        checked={formData.repeter}
+                        onChange={(e) => setFormData({...formData, repeter: e.target.checked})}
+                    />
+                    <span className="form-label" style={{ marginBottom: 0 }}>🔁 Répéter cet événement</span>
+                </label>
+            </div>
+
+            {formData.repeter && (
+                <>
+                    <div className="form-group">
+                        <label className="form-label">Fréquence</label>
+                        <select
+                            className="form-select"
+                            value={formData.typeRecurrence}
+                            onChange={(e) => setFormData({...formData, typeRecurrence: e.target.value})}
+                        >
+                            <option value="jour">Tous les jours (Lun-Ven)</option>
+                            <option value="semaine">Chaque semaine (même jour)</option>
+                            <option value="mois">Chaque mois (même date)</option>
+                        </select>
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">Jusqu'au</label>
+                        <input
+                            type="date"
+                            className="form-control"
+                            value={formData.dateFin}
+                            onChange={(e) => setFormData({...formData, dateFin: e.target.value})}
+                            min={editingDate ? formatDate(editingDate) : ''}
+                        />
+                    </div>
+                </>
+            )}
         </div>
-     </div>
+            
+            <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                    Annuler
+                </button>
+                <button className="btn btn-primary" onClick={handleSave}>
+                    Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+)}
+</div>
+</div>
     );
 }
-        // ========== COMPOSANTS CHALLENGE ==========
 
+// ========== COMPOSANTS CHALLENGE ==========
 function ChallengeCard({ currentUser, ventes, objectifs, filters }) {
     const [isVisible, setIsVisible] = React.useState(() => {
         const saved = localStorage.getItem(`challenge_visible_${currentUser.email}`);
@@ -1741,7 +1887,6 @@ return (
 }
 
 // ========== DASHBOARD ==========
-        // ========== DASHBOARD ==========
         
       function Dashboard({ ventes, currentUser, permanences, objectifs, filters }) {
     const stats = useMemo(() => {
