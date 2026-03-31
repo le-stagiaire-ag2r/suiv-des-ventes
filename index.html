@@ -1065,6 +1065,7 @@ todayDate.setHours(0, 0, 0, 0);
 const isToday = formatDate(todayDate) === dateStr;
 const isCurrentUser = commercial.email === currentUser.email;
 const canEdit = currentUser.type === 'admin' || isCurrentUser;
+const canView = !canEdit && currentUser.role === 'commercial';
 const isWeekend = date.getDay() === 0 || date.getDay() === 6;
 
 return (
@@ -1075,15 +1076,16 @@ return (
                                                     borderBottom: '1px solid #e5e7eb',
                                                     borderLeft: '1px solid #f3f4f6',
                                                     textAlign: 'center',
-                                                    cursor: isCurrentUser && !isWeekend ? 'pointer' : 'default',
-                                                    background: isWeekend ? '#f9fafb' : (statutInfo ? `${statutInfo.color}15` : (isToday ? '#fef3c7' : 'white')),
+                                                    cursor: canEdit && !isWeekend ? 'pointer' : 'default',
+background: isWeekend ? '#f9fafb' : (statutInfo ? `${statutInfo.color}15` : (isToday ? '#fef3c7' : 'white')),
+opacity: canView ? 0.7 : 1,
                                                     transition: 'all 0.2s',
                                                     verticalAlign: 'middle',
                                                     height: '60px'
                                                 }}
                                                onClick={() => canEdit && !isWeekend && handleOpenModal(date, commercial.email)}
 onMouseEnter={(e) => {
-    if (isCurrentUser && !isWeekend) {
+    if (canEdit && !isWeekend) {
         e.currentTarget.style.background = '#e5e7eb';
     }
 }}
