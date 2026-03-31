@@ -1090,7 +1090,7 @@ onMouseEnter={(e) => {
     }
 }}
 onMouseLeave={(e) => {
-    if (isCurrentUser && !isWeekend) {
+    if (canEdit && !isWeekend) {
         const bg = isWeekend ? '#f9fafb' : (statutInfo ? `${statutInfo.color}15` : (isToday ? '#fef3c7' : 'white'));
         e.currentTarget.style.background = bg;
     }
