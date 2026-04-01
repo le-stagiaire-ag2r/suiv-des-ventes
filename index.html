@@ -2132,11 +2132,41 @@ const contratsUniques = [...new Set(ventes.map(v => v.contrat))].filter(Boolean)
 console.log('=== TOUS LES CONTRATS DANS FIREBASE ===');
 console.log(contratsUniques);
             // Définir les familles de produits
-            const familles = {
-                'Santé': ['Santé animaux', 'Santé Sorties de groupe', 'VIAPLUS', 'Sante UNIRC', 'Protec territoriale', 'mutame', 'Protectvia'],
-                'Prévoyance': ['GPA', 'Perte Autonomie', 'Prima cap Obsq PP', 'HPI', 'Prima vol Obsq PU', 'Prévoyance Individuelle', 'Prima vol Obsq PP', 'Prima cap Obsq PU'],
-                'Épargne': ['Patrimoine selection vie', 'Multiprima', 'terre de vie', 'Certificats Mutualistes', 'Epargne Patrimonial', 'Vivépargne']
-            };
+      const familles = {
+    'Santé': [
+        'Santé animaux', 
+        'Santé Sorties de groupe', 
+        'VIAPLUS', 
+        'Sante UNIRC', 
+        'Protec territoriale\n', 
+        'Protec territoriale',
+        'mutame', 
+        'Protectvia'
+    ],
+    'Prévoyance': [
+        'GPA', 
+        'Perte Autonomie', 
+        'Prima cap Obsq PP\n',
+        'Prima cap Obsq PP', 
+        'HPI', 
+        'Prima vol Obsq PU\n',
+        'Prima vol Obsq PU', 
+        'Prévoyance Individuelle', 
+        'Prima vol Obsq PP\n',
+        'Prima vol Obsq PP', 
+        'Prima cap Obsq PU\n',
+        'Prima cap Obsq PU'
+    ],
+    'Épargne': [
+        'Patrimoine selection vie', 
+        'Multiprima', 
+        'terre de vie', 
+        'Certificats Mutualistes\n',
+        'Certificats Mutualistes', 
+        'Epargne Patrimonial', 
+        'Vivépargne'
+    ]
+};
 
             const couleursFamilles = {
                 'Santé': '#10b981',
