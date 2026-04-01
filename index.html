@@ -1864,7 +1864,7 @@ return (
 
 // ========== DASHBOARD ==========
         
-      function Dashboard({ ventes, currentUser, permanences, objectifs, filters }) {
+     function Dashboard({ ventes, currentUser, permanences, objectifs, filters, config }) {
     const stats = useMemo(() => {
         const totalVentes = ventes.length;
         const totalCA = ventes.reduce((sum, v) => sum + (parseFloat(v.chiffreAffaires) || 0), 0);
@@ -2463,6 +2463,127 @@ return (
 )}
 
 {/* ===== SPÉCIALITÉS PAR PRODUIT ===== */}
+<div className="card">
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h3 style={{ fontSize: '1.125rem', fontWeight: '600', margin: 0 }}>
+            🎯 Spécialités - Top 5 par Produit
+        </h3>
+        <select 
+            className="form-select" 
+            style={{ width: '250px' }}
+            value={filters.produitSpecialite || 'all'}
+            onChange={(e) => setFilters({ ...filters, produitSpecialite: e.target.value })}
+        >
+            <option value="all">Tous les produits</option>
+            {(config?.produitsOptions || []).map(produit => (
+                <option key={produit.value} value={produit.value}>
+                    {produit.label}
+                </option>
+            ))}
+        </select>
+    </div>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '1.5rem' }}>
+        {(() => {
+            const produitsOptions = config?.produitsOptions || [];
+
+            // Filtrer selon la sélection
+            const produitsAfficher = filters.produitSpecialite && filters.produitSpecialite !== 'all'
+                ? produitsOptions.filter(p => p.value === filters.produitSpecialite)
+                : produitsOptions;
+
+            return produitsAfficher.map(produit => {
+                // Compter les ventes par commercial pour ce produit
+                const ventesProduit = ventes.filter(v => v.contrat === produit.value);
+                const comptesParCommercial = {};
+                
+                ventesProduit.forEach(vente => {
+                    const commercial = vente.commercial;
+                    if (commercial) {
+                        comptesParCommercial[commercial] = (comptesParCommercial[commercial] || 0) + 1;
+                    }
+                });
+
+                // Trier par nombre de ventes (TOP 5)
+                const top5 = Object.entries(comptesParCommercial)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5);
+
+                if (top5.length === 0) return null;
+
+                return (
+                    <div key={produit.value} style={{ 
+                        border: '1px solid #e5e7eb', 
+                        borderRadius: '0.5rem', 
+                        padding: '1rem',
+                        background: 'white'
+                    }}>
+                        <h4 style={{ 
+                            fontSize: '1.125rem', 
+                            fontWeight: '600', 
+                            marginBottom: '1rem',
+                            color: '#1f2937'
+                        }}>
+                            {produit.label}
+                        </h4>
+                        
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <thead>
+                                <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
+                                    <th style={{ textAlign: 'left', padding: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
+                                        Rang
+                                    </th>
+                                    <th style={{ textAlign: 'left', padding: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
+                                        Commercial
+                                    </th>
+                                    <th style={{ textAlign: 'right', padding: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
+                                        Ventes
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {top5.map(([commercial, count], index) => {
+                                    const isCurrentUser = commercial === currentUser.name;
+                                    return (
+                                        <tr 
+                                            key={commercial} 
+                                            style={{ 
+                                                borderBottom: '1px solid #f3f4f6',
+                                                background: isCurrentUser ? '#eff6ff' : 'transparent'
+                                            }}
+                                        >
+                                            <td style={{ 
+                                                padding: '0.75rem 0.5rem', 
+                                                fontWeight: index < 3 ? '700' : '400',
+                                                fontSize: '1rem'
+                                            }}>
+                                                {index + 1}
+                                            </td>
+                                            <td style={{ 
+                                                padding: '0.75rem 0.5rem',
+                                                fontWeight: isCurrentUser ? '600' : '400'
+                                            }}>
+                                                {commercial}
+                                            </td>
+                                            <td style={{ 
+                                                padding: '0.75rem 0.5rem', 
+                                                textAlign: 'right',
+                                                fontWeight: '600',
+                                                color: '#1f2937'
+                                            }}>
+                                                {count}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                );
+            }).filter(Boolean);
+        })()}
+    </div>
+</div>
+            
 <div className="card">
     <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
         🎯 Spécialités - Top 5 par Produit
@@ -4176,7 +4297,7 @@ const handleSubmitPermanence = async (permData) => {
                     />
 
             {currentView === 'dashboard' && (
-    <Dashboard ventes={filteredVentes} currentUser={currentUser} permanences={permanences} objectifs={objectifs} filters={filters} />
+   <Dashboard ventes={filteredVentes} currentUser={currentUser} permanences={permanences} objectifs={objectifs} filters={filters} config={config} />
 )}
 
                    {currentView === 'permanences' && currentUser.type === 'commercial' && (
