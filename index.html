@@ -1295,145 +1295,130 @@ onMouseLeave={(e) => {
         </div>
 
         {selectedCommercial ? (
-            <div style={{ overflowX: 'auto' }}>
-               <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '80px repeat(7, 1fr)', gap: '1px', background: '#e5e7eb', minWidth: '800px' }}>
-                    {/* En-tête avec les jours */}
-                    <div style={{ background: 'white', padding: '0.75rem', fontWeight: '600' }}>Heure</div>
+    <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px', background: 'white' }}>
+            <thead>
+                <tr>
+                    <th style={{ border: '1px solid #e5e7eb', padding: '0.75rem', background: '#f9fafb', fontWeight: '600', width: '80px' }}>
+                        Heure
+                    </th>
                     {weekDays.map((date, idx) => {
                         const isWeekend = date.getDay() === 0 || date.getDay() === 6;
                         return (
-                            <div key={idx} style={{ 
-                                background: isWeekend ? '#f9fafb' : 'white', 
+                            <th key={idx} style={{ 
+                                border: '1px solid #e5e7eb', 
                                 padding: '0.75rem', 
+                                background: isWeekend ? '#f3f4f6' : '#f9fafb',
                                 fontWeight: '600',
                                 textAlign: 'center'
                             }}>
                                 <div>{date.toLocaleDateString('fr-FR', { weekday: 'short' })}</div>
-                                <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                                <div style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: 'normal' }}>
                                     {date.getDate()}/{date.getMonth() + 1}
                                 </div>
-                            </div>
+                            </th>
                         );
                     })}
-                    
-                   {/* Grille horaire 08h-19h */}
-<div style={{ display: 'contents' }}>
-    {/* Lignes d'heures */}
-    {Array.from({ length: 12 }, (_, i) => i + 8).map(hour => (
-        <>
-            <div key={`hour-${hour}`} style={{ 
-                background: 'white', 
-                padding: '0.5rem', 
-                fontSize: '0.75rem',
-                color: '#6b7280',
-                borderRight: '1px solid #e5e7eb'
-            }}>
-                {hour}:00
-            </div>
-            {weekDays.map((date, dayIdx) => {
-                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-                const canEdit = currentUser.type === 'admin' || selectedCommercial === currentUser.email;
-                
-                return (
-                    <div 
-    key={`${hour}-${dayIdx}`} 
-    style={{ 
-        background: isWeekend ? '#f9fafb' : 'white',
-        minHeight: '60px',
-        height: '60px',
-        padding: '0.25rem',
-        position: 'relative',
-        cursor: canEdit && !isWeekend ? 'pointer' : 'default',
-        transition: 'background 0.2s',
-        borderBottom: '1px solid #e5e7eb'
-    }}
-                        onClick={() => {
-                            if (canEdit && !isWeekend) {
-                                handleOpenModal(date, selectedCommercial);
-                            }
-                        }}
-                        onMouseEnter={(e) => {
-                            if (canEdit && !isWeekend) {
-                                e.currentTarget.style.background = '#e5e7eb';
-                            }
-                        }}
-                        onMouseLeave={(e) => {
-                            if (canEdit && !isWeekend) {
-                                e.currentTarget.style.background = isWeekend ? '#f9fafb' : 'white';
-                            }
-                        }}
-                    >
-                        {/* Les événements seront affichés par-dessus */}
-                    </div>
-                );
-            })}
-        </>
-    ))}
-</div>
-
-{/* Événements en position absolue */}
-{weekDays.map((date, dayIdx) => {
-    const dateStr = formatDate(date);
-    const dayEventsGrid = plannings[selectedCommercial]?.[dateStr] || [];
-const events = Array.isArray(dayEventsGrid) ? dayEventsGrid : (dayEventsGrid ? [dayEventsGrid] : []);
-    
-    return events.map((evt, evtIdx) => {
-        if (!evt || !evt.heureDebut || !evt.heureFin) return null;
-        
-        const startHour = parseInt(evt.heureDebut.split(':')[0]);
-        const startMin = parseInt(evt.heureDebut.split(':')[1]);
-        const endHour = parseInt(evt.heureFin.split(':')[0]);
-        const endMin = parseInt(evt.heureFin.split(':')[1]);
-        
-        // Calculer la position et hauteur
-        const startOffset = ((startHour - 8) * 60 + startMin) / 60; // Heures depuis 8h
-        const duration = ((endHour * 60 + endMin) - (startHour * 60 + startMin)) / 60; // Durée en heures
-        
-        const top = startOffset * 60; // 60px par heure
-        const height = duration * 60;
-        const leftPercent = ((dayIdx + 1) / 8) * 100;
-        
-        const statutInfo = getStatutInfo(evt.statut);
-        
-        return (
-            <div
-                key={`${dateStr}-${evtIdx}`}
-style={{
-    position: 'absolute',
-    top: `${top + 80}px`,
-    left: `calc(80px + ${leftPercent}%)`,
-    width: `calc(${100/7}%)`,
-    height: `${height}px`,
-    background: `${statutInfo.color}15`,
-    borderLeft: `3px solid ${statutInfo.color}`,
-    borderTop: `1px solid ${statutInfo.color}40`,
-    borderBottom: `1px solid ${statutInfo.color}40`,
-    boxSizing: 'border-box',
-                    padding: '0.5rem',
-                    fontSize: '0.75rem',
-                    borderRadius: '4px',
-                    zIndex: 1,
-                    pointerEvents: 'none',
-                    overflow: 'hidden'
-                }}
-            >
-                <div style={{ fontWeight: '700', marginBottom: '0.25rem' }}>
-                    {evt.heureDebut} - {evt.heureFin}
-                </div>
-                <div style={{ fontWeight: '600' }}>{statutInfo.label}</div>
-                {evt.lieu && <div style={{ color: '#6b7280', fontSize: '0.7rem' }}>{evt.lieu}</div>}
-            </div>
-        );
-    });
-})}
-                </div>
-            </div>
-        ) : (
-            <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
-                👆 Sélectionnez un commercial pour voir son planning hebdomadaire
-            </div>
-        )}
+                </tr>
+            </thead>
+            <tbody>
+                {Array.from({ length: 12 }, (_, i) => i + 8).map(hour => (
+                    <tr key={hour}>
+                        <td style={{ 
+                            border: '1px solid #e5e7eb', 
+                            padding: '0.5rem', 
+                            fontSize: '0.75rem',
+                            color: '#6b7280',
+                            fontWeight: '600',
+                            textAlign: 'center',
+                            background: '#f9fafb'
+                        }}>
+                            {hour}:00
+                        </td>
+                        {weekDays.map((date, dayIdx) => {
+                            const dateStr = formatDate(date);
+                            const dayEvents = plannings[selectedCommercial]?.[dateStr] || [];
+                            const events = Array.isArray(dayEvents) ? dayEvents : (dayEvents ? [dayEvents] : []);
+                            
+                            // Trouver les événements qui couvrent cette heure
+                            const eventsAtThisHour = events.filter(evt => {
+                                if (!evt || !evt.heureDebut || !evt.heureFin) return false;
+                                const startHour = parseInt(evt.heureDebut.split(':')[0]);
+                                const endHour = parseInt(evt.heureFin.split(':')[0]);
+                                return hour >= startHour && hour < endHour;
+                            });
+                            
+                            const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                            const canEdit = currentUser.type === 'admin' || selectedCommercial === currentUser.email;
+                            
+                            // Si événement qui COMMENCE à cette heure, afficher le label
+                            const eventStartingHere = events.find(evt => {
+                                if (!evt || !evt.heureDebut) return false;
+                                return parseInt(evt.heureDebut.split(':')[0]) === hour;
+                            });
+                            
+                            return (
+                                <td 
+                                    key={dayIdx} 
+                                    style={{ 
+                                        border: '1px solid #e5e7eb',
+                                        padding: '0.25rem',
+                                        height: '60px',
+                                        background: eventsAtThisHour.length > 0 
+                                            ? `${getStatutInfo(eventsAtThisHour[0].statut).color}15`
+                                            : (isWeekend ? '#f9fafb' : 'white'),
+                                        borderLeft: eventsAtThisHour.length > 0 
+                                            ? `3px solid ${getStatutInfo(eventsAtThisHour[0].statut).color}`
+                                            : '1px solid #e5e7eb',
+                                        cursor: canEdit && !isWeekend ? 'pointer' : 'default',
+                                        verticalAlign: 'top',
+                                        position: 'relative'
+                                    }}
+                                    onClick={() => {
+                                        if (canEdit && !isWeekend) {
+                                            handleOpenModal(date, selectedCommercial);
+                                        }
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (canEdit && !isWeekend && eventsAtThisHour.length === 0) {
+                                            e.currentTarget.style.background = '#e5e7eb';
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (canEdit && !isWeekend && eventsAtThisHour.length === 0) {
+                                            e.currentTarget.style.background = isWeekend ? '#f9fafb' : 'white';
+                                        }
+                                    }}
+                                >
+                                    {eventStartingHere && (
+                                        <div style={{ 
+                                            fontSize: '0.7rem', 
+                                            fontWeight: '600',
+                                            color: getStatutInfo(eventStartingHere.statut).color
+                                        }}>
+                                            {eventStartingHere.heureDebut} - {eventStartingHere.heureFin}
+                                            <div style={{ fontSize: '0.65rem', fontWeight: 'normal', marginTop: '2px' }}>
+                                                {getStatutInfo(eventStartingHere.statut).label}
+                                            </div>
+                                            {eventStartingHere.lieu && (
+                                                <div style={{ fontSize: '0.6rem', color: '#6b7280', marginTop: '2px' }}>
+                                                    📍 {eventStartingHere.lieu}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </td>
+                            );
+                        })}
+                    </tr>
+                ))}
+            </tbody>
+        </table>
     </div>
+) : (
+    <p style={{ textAlign: 'center', color: '#6b7280', marginTop: '2rem' }}>
+        Veuillez sélectionner un commercial pour voir son planning
+    </p>
 )}
 
 {/* Modal d'édition */}
