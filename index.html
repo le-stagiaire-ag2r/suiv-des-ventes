@@ -1864,7 +1864,7 @@ return (
 
 // ========== DASHBOARD ==========
         
-     function Dashboard({ ventes, currentUser, permanences, objectifs, filters, config }) {
+    function Dashboard({ ventes, currentUser, permanences, objectifs, filters, setFilters, config }) {
        console.log('Config dans Dashboard:', config);
     console.log('Produits:', config?.produitsOptions);   
     const stats = useMemo(() => {
@@ -2057,7 +2057,7 @@ return (
                                 </div>
                                {moyenne !== null ? (
     <div style={{ fontSize: '0.875rem', color: '#059669', fontWeight: '500', marginBottom: '0.25rem' }}>
-        💰 Moyenne: {moyenne.toFixed(2)}€/visite
+        💰 Moyenne: {moyenne.toFixed(2)}€/permanence
     </div>
 ) : (
     <div style={{ fontSize: '0.875rem', color: '#9ca3af', fontWeight: '500', marginBottom: '0.25rem', fontStyle: 'italic' }}>
@@ -2468,7 +2468,7 @@ return (
 <div className="card">
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h3 style={{ fontSize: '1.125rem', fontWeight: '600' }}>
-            🎯 Spécialités - Top 5 par Produit
+             Spécialités par Produit
         </h3>
         <select 
             className="form-select" 
@@ -4187,7 +4187,7 @@ const handleSubmitPermanence = async (permData) => {
                     />
 
             {currentView === 'dashboard' && (
-   <Dashboard ventes={filteredVentes} currentUser={currentUser} permanences={permanences} objectifs={objectifs} filters={filters} config={config} />
+   <Dashboard ventes={filteredVentes} currentUser={currentUser} permanences={permanences} objectifs={objectifs} filters={filters} setFilters={setFilters} config={config} />
 )}
 
                    {currentView === 'permanences' && currentUser.type === 'commercial' && (
