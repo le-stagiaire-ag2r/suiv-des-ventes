@@ -1336,15 +1336,17 @@ onMouseLeave={(e) => {
                 
                 return (
                     <div 
-                        key={`${hour}-${dayIdx}`} 
-                        style={{ 
-                            background: isWeekend ? '#f9fafb' : 'white',
-                            minHeight: '60px',
-                            padding: '0.25rem',
-                            position: 'relative',
-                            cursor: canEdit && !isWeekend ? 'pointer' : 'default',
-                            transition: 'background 0.2s'
-                        }}
+    key={`${hour}-${dayIdx}`} 
+    style={{ 
+        background: isWeekend ? '#f9fafb' : 'white',
+        minHeight: '60px',
+        height: '60px',
+        padding: '0.25rem',
+        position: 'relative',
+        cursor: canEdit && !isWeekend ? 'pointer' : 'default',
+        transition: 'background 0.2s',
+        borderBottom: '1px solid #e5e7eb'
+    }}
                         onClick={() => {
                             if (canEdit && !isWeekend) {
                                 handleOpenModal(date, selectedCommercial);
@@ -1399,8 +1401,8 @@ const events = Array.isArray(dayEventsGrid) ? dayEventsGrid : (dayEventsGrid ? [
 style={{
     position: 'absolute',
     top: `${top + 80}px`,
-    left: `calc(80px + ${leftPercent}%)`,
-    width: `calc(${100/7}% - 4px)`,
+    left: `calc(80px + ${leftPercent}% + 5px)`,
+    width: `calc(${100/7}% - 10px)`,
     height: `${height}px`,
     background: `${statutInfo.color}20`,
                     borderLeft: `4px solid ${statutInfo.color}`,
@@ -1476,28 +1478,6 @@ style={{
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', gap: '0.25rem' }}>
-                                        <button
-                                            className="btn btn-secondary"
-                                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setFormData({
-                                                    statut: evt.statut,
-                                                    lieu: evt.lieu || '',
-                                                    heureDebut: evt.heureDebut,
-                                                    heureFin: evt.heureFin,
-                                                    commentaire: evt.commentaire || '',
-                                                    repeter: false,
-                                                    typeRecurrence: 'semaine',
-                                                    dateFin: '',
-                                                    targetEmail: formData.targetEmail,
-                                                    editingEventId: evt.id
-                                                });
-                                            }}
-                                            title="Modifier cet événement"
-                                        >
-                                            ✏️
-                                        </button>
                                         <button
                                             className="btn btn-danger"
                                             style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
