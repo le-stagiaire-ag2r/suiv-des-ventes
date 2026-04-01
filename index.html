@@ -2120,6 +2120,76 @@ return (
     </div>
 </div>
 
+  {/* ===== RÉPARTITION PAR FAMILLE DE PRODUITS ===== */}
+<div className="card">
+    <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
+        🏢 Répartition par Famille de Produits
+    </h3>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem' }}>
+        {(() => {
+            // Définir les familles de produits
+            const familles = {
+                'Santé': ['Santé animaux', 'Santé Sorties de groupe', 'VIAPLUS', 'Sante UNIRC', 'Protec territoriale', 'mutame', 'Protectvia'],
+                'Prévoyance': ['GPA', 'Perte Autonomie', 'Prima cap Obsq PP', 'HPI', 'Prima vol Obsq PU', 'Prévoyance Individuelle', 'Prima vol Obsq PP', 'Prima cap Obsq PU'],
+                'Épargne': ['Patrimoine selection vie', 'Multiprima', 'terre de vie', 'Certificats Mutualistes', 'Epargne Patrimonial', 'Vivépargne']
+            };
+
+            const couleursFamilles = {
+                'Santé': '#10b981',
+                'Prévoyance': '#3b82f6',
+                'Épargne': '#f59e0b'
+            };
+
+            // Compter les ventes par famille
+            const ventesParFamille = {};
+            const totalVentes = ventes.length;
+
+            Object.keys(familles).forEach(famille => {
+                ventesPar famille[famille] = ventes.filter(v => 
+                    familles[famille].includes(v.contrat)
+                ).length;
+            });
+
+            return Object.entries(ventesPar famille).map(([famille, count]) => {
+                const percentage = totalVentes > 0 ? ((count / totalVentes) * 100).toFixed(1) : 0;
+                const couleur = couleursFamilles[famille];
+
+                return (
+                    <div key={famille} style={{ textAlign: 'center' }}>
+                        <div style={{ 
+                            width: '120px', 
+                            height: '120px', 
+                            borderRadius: '50%',
+                            background: `conic-gradient(${couleur} 0deg ${percentage * 3.6}deg, #e5e7eb ${percentage * 3.6}deg 360deg)`,
+                            margin: '0 auto 1rem', 
+                            display: 'flex', 
+                            alignItems: 'center',
+                            justifyContent: 'center', 
+                            fontSize: '2rem', 
+                            fontWeight: 'bold', 
+                            color: '#000000'
+                        }}>
+                            {percentage}%
+                        </div>
+                        <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                            {famille}
+                        </div>
+                        <div style={{ fontSize: '1.125rem', fontWeight: '600' }}>
+                            {count} ventes
+                        </div>
+                        <div style={{ fontSize: '0.875rem', fontWeight: '600', color: couleur, marginTop: '0.25rem' }}>
+                            PNA : {ventes
+                                .filter(v => familles[famille].includes(v.contrat))
+                                .reduce((sum, v) => sum + (parseFloat(v.pna) || 0), 0)
+                                .toFixed(2)}€
+                        </div>
+                    </div>
+                );
+            });
+        })()}
+    </div>
+</div>
+            
            {/* ===== GRAPHIQUE VENTES PAR PRODUIT (DONUT) ===== */}
 <div className="card">
     <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
