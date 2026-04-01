@@ -2127,6 +2127,10 @@ return (
     </h3>
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem' }}>
         {(() => {
+    // DEBUG : Afficher tous les contrats uniques
+const contratsUniques = [...new Set(ventes.map(v => v.contrat))].filter(Boolean).sort();
+console.log('=== TOUS LES CONTRATS DANS FIREBASE ===');
+console.log(contratsUniques);
             // Définir les familles de produits
             const familles = {
                 'Santé': ['Santé animaux', 'Santé Sorties de groupe', 'VIAPLUS', 'Sante UNIRC', 'Protec territoriale', 'mutame', 'Protectvia'],
