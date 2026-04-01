@@ -2466,26 +2466,35 @@ return (
 
 {/* ===== SPÉCIALITÉS PAR PRODUIT ===== */}            
 <div className="card">
-    <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
-        🎯 Spécialités - Top 5 par Produit
-    </h3>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h3 style={{ fontSize: '1.125rem', fontWeight: '600' }}>
+            🎯 Spécialités - Top 5 par Produit
+        </h3>
+        <select 
+            className="form-select" 
+            style={{ width: '250px' }}
+            value={filters.produitSpecialite || 'all'}
+            onChange={(e) => setFilters({ ...filters, produitSpecialite: e.target.value })}
+        >
+            <option value="all">Tous les produits</option>
+            {(config?.contrats || []).map(contrat => (
+                <option key={contrat} value={contrat}>
+                    {contrat}
+                </option>
+            ))}
+        </select>
+    </div>
+
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '1.5rem' }}>
         {(() => {
-            const produitsOptions = [
-                { value: 'Santé', label: 'Santé' },
-                { value: 'Auto', label: 'Auto' },
-                { value: 'MRH', label: 'MRH' },
-                { value: 'Moto', label: 'Moto' },
-                { value: 'GPA', label: 'GPA' },
-                { value: 'RC PRO', label: 'RC PRO' },
-                { value: 'Garantie Financière', label: 'Garantie Financière' },
-                { value: 'Emprunteur', label: 'Emprunteur' },
-                { value: 'Autre', label: 'Autre' }
-            ];
+            // Filtrer les produits selon la sélection
+            const produitsAfficher = filters.produitSpecialite === 'all' 
+                ? (config?.contrats || [])
+                : [filters.produitSpecialite];
 
-            return produitsOptions.map(produit => {
+            return produitsAfficher.map(produit => {
                 // Compter les ventes par commercial pour ce produit
-                const ventesProduit = ventes.filter(v => v.contrat === produit.value);
+                const ventesProduit = ventes.filter(v => v.contrat === produit);
                 const comptesParCommercial = {};
                 
                 ventesProduit.forEach(vente => {
@@ -2503,7 +2512,7 @@ return (
                 if (top5.length === 0) return null;
 
                 return (
-                    <div key={produit.value} style={{ 
+                    <div key={produit} style={{ 
                         border: '1px solid #e5e7eb', 
                         borderRadius: '0.5rem', 
                         padding: '1rem',
@@ -2515,7 +2524,7 @@ return (
                             marginBottom: '1rem',
                             color: '#1f2937'
                         }}>
-                            {produit.label}
+                            {produit}
                         </h4>
                         
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -2574,7 +2583,7 @@ return (
             }).filter(Boolean);
         })()}
     </div>
-</div>
+</div>            
 
             {/* ===== DERNIÈRES VENTES ===== */}
             <div className="card">
