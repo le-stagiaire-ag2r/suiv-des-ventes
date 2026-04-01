@@ -1391,7 +1391,7 @@ const events = Array.isArray(dayEventsGrid) ? dayEventsGrid : (dayEventsGrid ? [
         
         const top = startOffset * 60; // 60px par heure
         const height = duration * 60;
-        const leftPercent = (dayIdx / 7) * 100;
+        const leftPercent = ((dayIdx + 1) / 8) * 100;
         
         const statutInfo = getStatutInfo(evt.statut);
         
