@@ -4189,7 +4189,9 @@ const handleSubmitPermanence = async (permData) => {
             {currentView === 'dashboard' && (
    <Dashboard ventes={filteredVentes} currentUser={currentUser} permanences={permanences} objectifs={objectifs} filters={filters} setFilters={setFilters} config={config} />
 )}
-
+                    {currentView === 'calendrier' && (
+    <CalendrierPlanning currentUser={currentUser} />
+)}
                    {currentView === 'permanences' && currentUser.type === 'commercial' && (
     <>
         <div className="container" style={{ paddingTop: '1.5rem' }}>
