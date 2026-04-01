@@ -2145,12 +2145,12 @@ return (
             const totalVentes = ventes.length;
 
             Object.keys(familles).forEach(famille => {
-                ventesParfamille[famille] = ventes.filter(v => 
+                ventesParFamille[famille] = ventes.filter(v => 
                     familles[famille].includes(v.contrat)
                 ).length;
             });
 
-            return Object.entries(ventesParfamille).map(([famille, count]) => {
+            return Object.entries(ventesParFamille).map(([famille, count]) => {
                 const percentage = totalVentes > 0 ? ((count / totalVentes) * 100).toFixed(1) : 0;
                 const couleur = couleursFamilles[famille];
 
