@@ -2085,7 +2085,7 @@ return (
     <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
         📞 Taux de Conversion - Tél vs Face à face
     </h3>
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '2rem' }}>
         <div style={{ textAlign: 'center' }}>
             <div style={{ 
                 width: '120px', height: '120px', borderRadius: '50%',
@@ -2117,6 +2117,30 @@ return (
                 PNA : {ventes.filter(v => v.vente === 'Face à face').reduce((sum, v) => sum + (parseFloat(v.pna) || 0), 0).toFixed(2)}€
             </div>
         </div>
+{/* CAMEMBERT TRANSFERT À CHAUD */}
+        {(() => {
+            const ventesTel = ventes.filter(v => v.vente === 'Tél');
+            const transfertCount = ventesTel.filter(v => v.transfertAChaud === true).length;
+            const pctTransfert = ventesTel.length > 0 ? ((transfertCount / ventesTel.length) * 100).toFixed(1) : 0;
+            return (
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{
+                        width: '120px', height: '120px', borderRadius: '50%',
+                        background: `conic-gradient(#f59e0b 0deg ${pctTransfert * 3.6}deg, #e5e7eb ${pctTransfert * 3.6}deg 360deg)`,
+                        margin: '0 auto 1rem', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', fontSize: '1.5rem', fontWeight: 'bold', color: '#000'
+                    }}>
+                        {pctTransfert}%
+                    </div>
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>🔥 Transfert à chaud</div>
+                    <div style={{ fontSize: '1.125rem', fontWeight: '600' }}>{transfertCount} / {ventesTel.length} tél</div>
+                    <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#f59e0b', marginTop: '0.25rem' }}>
+                        PNA : {ventesTel.filter(v => v.transfertAChaud === true).reduce((sum, v) => sum + (parseFloat(v.pna) || 0), 0).toFixed(2)}€
+                    </div>
+                </div>
+            );
+        })()}
+
     </div>
 </div>
 
@@ -2860,8 +2884,22 @@ console.log(contratsUniques);
                                     </select>
                                 </div>
 
+                                {formData.vente === 'Tél' && (
+                                    <div className="form-group">
+                                        <label className="form-label">
+                                            <input
+                                                type="checkbox"
+                                                style={{ marginRight: '0.5rem' }}
+                                                checked={formData.transfertAChaud || false}
+                                                onChange={(e) => setFormData({...formData, transfertAChaud: e.target.checked})}
+                                            />
+                                            🔥 Transfert à chaud ?
+                                        </label>
+                                    </div>
+                                )}
+
                                 <div className="form-group">
-                                    <label className="form-label">Rattachement *</label>
+                                    <label className="form-label">Rattachement *</label> 
                                     <select
                                         className="form-select"
                                         value={formData.rattachement}
