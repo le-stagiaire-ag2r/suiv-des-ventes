@@ -2080,6 +2080,96 @@ return (
         })()}
     </div>
 </div>
+
+{/* ===== RÉPARTITION AGENCE VS PERMANENCE ===== */}
+<div className="card">
+    <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
+        🏢 Agence vs Permanence
+    </h3>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+        {(() => {
+            // Identifier les agences de la région
+            const agencesRegion = [...new Set(
+                Object.values(currentUser.allUsers || {})
+                    .filter(u => u.type === 'commercial' && u.region === currentUser.region)
+                    .map(u => u.agence)
+                    .filter(Boolean)
+            )];
+
+            // Séparer ventes agence / permanence
+            const ventesAgence = ventes.filter(v => agencesRegion.includes(v.rattachement));
+            const ventesPerm = ventes.filter(v => !agencesRegion.includes(v.rattachement));
+
+            // Si commercial : filtrer uniquement son agence et ses perms
+            const ventesAgenceAffichees = currentUser.type === 'commercial'
+                ? ventes.filter(v => v.rattachement === currentUser.agence)
+                : ventesAgence;
+
+            const ventesPermAffichees = currentUser.type === 'commercial'
+                ? ventes.filter(v => (currentUser.permanences || []).includes(v.rattachement))
+                : ventesPerm;
+
+            const totalAffichees = ventesAgenceAffichees.length + ventesPermAffichees.length;
+
+            const pctAgence = totalAffichees > 0
+                ? ((ventesAgenceAffichees.length / totalAffichees) * 100).toFixed(1)
+                : 0;
+            const pctPerm = totalAffichees > 0
+                ? ((ventesPermAffichees.length / totalAffichees) * 100).toFixed(1)
+                : 0;
+
+            const pnaAgence = ventesAgenceAffichees.reduce((sum, v) => sum + (parseFloat(v.pna) || 0), 0);
+            const pnaPerm = ventesPermAffichees.reduce((sum, v) => sum + (parseFloat(v.pna) || 0), 0);
+
+            return (
+                <>
+                    {/* CAMEMBERT AGENCE */}
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{
+                            width: '120px', height: '120px', borderRadius: '50%',
+                            background: `conic-gradient(#3b82f6 0deg ${pctAgence * 3.6}deg, #e5e7eb ${pctAgence * 3.6}deg 360deg)`,
+                            margin: '0 auto 1rem', display: 'flex', alignItems: 'center',
+                            justifyContent: 'center', fontSize: '1.5rem', fontWeight: 'bold', color: '#000'
+                        }}>
+                            {pctAgence}%
+                        </div>
+                        <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                            🏢 Agence
+                        </div>
+                        <div style={{ fontSize: '1.125rem', fontWeight: '600' }}>
+                            {ventesAgenceAffichees.length} affaires
+                        </div>
+                        <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#3b82f6', marginTop: '0.25rem' }}>
+                            PNA : {pnaAgence.toFixed(2)}€
+                        </div>
+                    </div>
+
+                    {/* CAMEMBERT PERMANENCE */}
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{
+                            width: '120px', height: '120px', borderRadius: '50%',
+                            background: `conic-gradient(#10b981 0deg ${pctPerm * 3.6}deg, #e5e7eb ${pctPerm * 3.6}deg 360deg)`,
+                            margin: '0 auto 1rem', display: 'flex', alignItems: 'center',
+                            justifyContent: 'center', fontSize: '1.5rem', fontWeight: 'bold', color: '#000'
+                        }}>
+                            {pctPerm}%
+                        </div>
+                        <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                            📍 Permanence
+                        </div>
+                        <div style={{ fontSize: '1.125rem', fontWeight: '600' }}>
+                            {ventesPermAffichees.length} affaires
+                        </div>
+                        <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#10b981', marginTop: '0.25rem' }}>
+                            PNA : {pnaPerm.toFixed(2)}€
+                        </div>
+                    </div>
+                </>
+            );
+        })()}
+    </div>
+</div>
+            
            {/* ===== TAUX DE CONVERSION ===== */}
 <div className="card">
     <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem' }}>
@@ -2180,6 +2270,8 @@ console.log(contratsUniques);
         'Prima vol Obsq PP', 
         'Prima cap Obsq PU\n',
         'Prima cap Obsq PU'
+        'Prima Cap Obs PU',    
+        'Prima Cap Obs PU\n'   
     ],
     'Épargne': [
         'Patrimoine selection vie', 
